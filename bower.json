@@ -1,0 +1,19 @@
+{
+  "name": "rtl-demo-client",
+  "version": "0.0.0",
+  "authors": [
+    "Rob Cannon <rob.cannon@axiosengineering.com>"
+  ],
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "bootstrap": "~3.2.0"
+  }
+}
