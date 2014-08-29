@@ -43,7 +43,7 @@ module.exports = function(grunt) {
           endtag: '<!-- endbuild -->'
         },
         files: {
-          'index.html': ['components/**/*.js', 'js/**/*.js', 'css/**/*.css']
+          'index.html': ['components/**/*.js', 'app/**/*.js', 'css/**/*.css']
         }
       }
     },
@@ -69,7 +69,7 @@ module.exports = function(grunt) {
         src: 'views/**/*.html',
         dest: distDir+ '/js/views-tpls.js',
         options: {
-          module: 'webSCA',
+          module: 'rtl-demo-app',
           usemin: distDir + '/js/app.js',
           htmlmin: htmlminProd
         }
@@ -78,7 +78,7 @@ module.exports = function(grunt) {
         src: 'components/**/*.html',
         dest: distDir + '/js/components-tpls.js',
         options: {
-          module: 'webSCA',
+          module: 'rtl-demo-app',
           usemin: distDir + '/js/app.js',
           htmlmin: htmlminProd
         }

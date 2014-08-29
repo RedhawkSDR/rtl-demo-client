@@ -10,9 +10,16 @@
     <!-- build:js lib/vendor.js -->
     <script src="bower_components/jquery/dist/jquery.js"></script>
     <script src="bower_components/bootstrap/dist/js/bootstrap.js"></script>
+    <script src="bower_components/angular/angular.js"></script>
+    <script src="bower_components/angular-route/angular-route.js"></script>
+    <script src="bower_components/angular-resource/angular-resource.js"></script>
     <!-- endbuild -->
 
     <!-- build:js js/app.js -->
+    <script src="components/rtl-rest/rtl-rest-directives.js"></script>
+    <script src="components/rtl-rest/rtl-rest-services.js"></script>
+    <script src="app/rtl-demo-app.js"></script>
+    <script src="app/rtl-demo-controllers.js"></script>
     <!-- endbuild -->
 
     <!-- build:css lib/vendor.css -->
@@ -22,7 +29,7 @@
     <!-- build:css css/app.css -->
     <!-- endbuild -->
   </head>
-  <body>
+  <body ng-app="rtl-demo-app">
 
     <nav class="navbar" role="navigation">
 
@@ -31,13 +38,13 @@
         <li><a href="#">Overview</a></li>
       </ul>
 
+      <ul class="nav navbar-text navbar-right">
+        <li><device-status></device-status></li>
+      </ul>
     </nav>
 
-    <div class="container" >
+    <div id="view" ng-view></div>
 
-      <div id="view"></div>
-
-    </div>
     <div class="container">
       <div id="footer"></div>
     </div>
