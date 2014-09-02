@@ -11,36 +11,40 @@
     <div class="col-sm-4 col-sm-offset-2">
 
       <h4 class="text-center">Frequency</h4>
-      <div class="well">
-        {{survey.frequency}}
+      <div class="well well-sm">
+        <h3 class="text-center text-info"><strong>{{survey.frequency}} MHz</strong></h3>
       </div>
 
     </div>
     <div class="col-sm-4">
 
       <h4 class="text-center">Processing</h4>
-      <div class="well">
-        {{survey.processing}}
+      <div class="well well-sm">
+        <h3 class="text-center text-info"><strong>{{survey.processing | uppercase}}</strong></h3>
       </div>
 
     </div>
   </div>
 
   <div class="row">
-    <div class="col-sm-6 col-sm-offset-3">
-
-      <form class="form-inline" role="form">
-        <div class="form-group">
-          <label class="sr-only" for="frequency">Frequency</label>
-          <input type="text" class="form-control" id="frequency" placeholder="Frequency" ng-model="form['frequency']"/>
-        </div>
-        <div class="form-group">
-          <label class="sr-only" for="processing">Processing</label>
-          <input type="text" class="form-control" id="processing" placeholder="Processing" ng-model="form['processing']"/>
-        </div>
-        <button type="submit" class="btn btn-default" ng-click="task()">Task</button>
-        <button class="btn btn-danger" ng-click="halt()">Halt</button>
-      </form>
+    <div class="col-sm-9 col-sm-offset-3">
+      <div class="center-block">
+        <form class="form-inline" role="form">
+          <div class="form-group">
+            <label class="sr-only" for="frequency">Frequency</label>
+            <div class="input-group">
+              <input type="text" class="form-control" id="frequency" placeholder="Frequency" ng-model="form['frequency']"/>
+              <div class="input-group-addon">MHz</div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="sr-only" for="processing">Processing</label>
+            <input type="text" class="form-control" id="processing" placeholder="Processing" ng-model="form['processing']"/>
+          </div>
+          <button type="submit" class="btn btn-default" ng-click="task()">Task</button>
+          <button class="btn btn-danger" ng-click="halt()">Halt</button>
+        </form>
+      </div>
 
     </div>
   </div>

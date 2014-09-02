@@ -4,7 +4,12 @@
  *
  * Created by rxc on 8/29/14.
  **/
-angular.module('rtl-rest', ['ngResource'])
+angular.module('rtl-rest', ['ngResource', 'toastr', 'ngAnimate'])
+    .config(function(toastrConfig) {
+      angular.extend(toastrConfig, {
+        positionClass: 'toast-bottom-right'
+      });
+    })
     .service('RTLRest', ['$resource',
       function($resource){
         var self = this;
@@ -22,8 +27,8 @@ angular.module('rtl-rest', ['ngResource'])
 
       }
     ])
-    .factory('rtl', ['RTLRest',
-      function(RTLRest) {
+    .factory('rtl', ['RTLRest', 'toastr',
+      function(RTLRest, toastr) {
 
         var log = {
           info:  function(txt) { console.log('INFO:  '+txt); },
@@ -33,8 +38,14 @@ angular.module('rtl-rest', ['ngResource'])
 
         var Survey = function() {
           var self = this;
+          var frequencyConversion = 1000 * 1000;
 
-          self._update = function(data) { angular.extend(self, data); };
+          self._update = function(data) {
+            if(data.hasOwnProperty('frequency') && data['frequency']){
+              data['frequency'] /= frequencyConversion;
+            }
+            angular.extend(self, data);
+          };
           self._load = function() {
             RTLRest.survey.status(function(data){
               self._update(data);
@@ -45,17 +56,20 @@ angular.module('rtl-rest', ['ngResource'])
           self.task = function(frequency, processing) {
             return RTLRest.survey.task({},
                 {
-                  frequency: parseFloat(frequency),
+                  frequency: parseFloat(frequency) * frequencyConversion,
                   processing: processing
                 }, function(data) {
                   if(data['success']) {
                     self._update(data['status']);
-                    log.info(data);
+                    toastr.success('Successfully tasked to '+frequency+' and '+processing+'.', 'Task');
+                    log.info(JSON.stringify(data));
                   } else {
                     log.error(data['error']);
+                    toastr.error(data['error'], 'Task');
                   }
                 }, function(resp) {
                   log.error(resp['data']['error']);
+                  toastr.error(resp['data']['error'], 'Task');
                 }
             );
           };
@@ -64,10 +78,12 @@ angular.module('rtl-rest', ['ngResource'])
             return RTLRest.survey.halt({}, {},
               function(data) {
                 if(data['success']) {
-                  log.info(data);
+                  log.info(JSON.stringify(data));
+                  toastr.success('Successfully halted processing.', 'Halt');
                   self._reload();
                 } else {
                   log.error(data['error']);
+                  toastr.error(data['error'], 'Halt');
                 }
               }
             );
