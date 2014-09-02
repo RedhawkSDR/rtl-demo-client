@@ -1,7 +1,6 @@
-Device:
 <span ng-class="{'text-success': device.status == 'ready', 'text-danger': device.status != 'ready'}">
   <strong>
   <span class="glyphicon" ng-class="{'glyphicon-ok-sign': device.status == 'ready', 'glyphicon-remove-sign': device.status != 'ready'}"></span>
-  {{device.type}}
+  {{device.type | uppercase}}
   </strong>
 </span>

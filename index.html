@@ -34,22 +34,21 @@
   </head>
   <body ng-app="rtl-demo-app">
 
-    <nav class="navbar" role="navigation">
+    <nav class="navbar navbar-default" role="navigation">
 
       <ul class="nav navbar-nav">
         <li><a class="navbar-brand" href="#"><strong><img class="logo" src=""/> RTL DEMO</strong></a></li>
-        <li><a href="#">Overview</a></li>
       </ul>
-
-      <ul class="nav navbar-text navbar-right">
-        <li><device-status></device-status></li>
+      <ul class="nav navbar-right">
+        <li><p class="navbar-text"><device-status></device-status></p></li>
       </ul>
     </nav>
 
     <div id="view" ng-view></div>
 
     <div class="container">
-      <div id="footer"></div>
+      <div id="footer">
+      </div>
     </div>
 
   </body>
