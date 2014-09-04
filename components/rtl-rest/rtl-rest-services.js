@@ -36,6 +36,9 @@ angular.module('rtl-rest', ['ngResource', 'toastr', 'ngAnimate'])
           error: function(txt) { console.log('ERROR: '+txt); }
         };
 
+        var rtl = {};
+        rtl.processors = [];
+
         var Survey = function() {
           var self = this;
           var frequencyConversion = 1000 * 1000;
@@ -48,7 +51,9 @@ angular.module('rtl-rest', ['ngResource', 'toastr', 'ngAnimate'])
           };
           self._load = function() {
             RTLRest.survey.status(function(data){
-              self._update(data);
+              if(data.hasOwnProperty('availableProcessing'))
+                rtl.processors = data['availableProcessing'];
+              self._update(data['status']);
             })
           };
           self._reload = function(){ self._load(); };
@@ -97,19 +102,15 @@ angular.module('rtl-rest', ['ngResource', 'toastr', 'ngAnimate'])
 
           self._update = function(data) { angular.extend(self, data); };
           self._load = function() {
-//            RTLRest.device.status(function(data){
-//              self._update(data);
-//            })
-            // TODO: Backend implementation of device REST call
-            log.warn('Using hardcoded data for device.');
-            self._update({type: "rtl", status: "ready"});
+            RTLRest.device.status(function(data){
+              self._update(data);
+            });
           };
           self._reload = function(){ self._load(); };
 
           self._load();
         };
 
-        var rtl = {};
         rtl.survey = new Survey();
         rtl.device = new Device();
         return rtl;

@@ -8,7 +8,7 @@
   </div>
 
   <div class="row">
-    <div class="col-sm-8 col-sm-offset-2">
+    <div class="col-sm-12">
 
       <div class="jumbotron text-center"><h2 class="text-muted">PLOT PLACEHOLDER</h2></div>
 
@@ -47,8 +47,12 @@
           </div>
           <div class="form-group">
             <label class="sr-only" for="processing">Processing</label>
-            <select ng-model="form['processing']" class="form-control" id="processing" ng-options="p for p in survey.availableProcessing">
-              <option value="">None</option>
+            <select
+                ng-model="form['processing']"
+                ng-init="form['processing'] = survey.processing ? survey.processing : processors[0]"
+                class="form-control"
+                id="processing"
+                ng-options="p for p in processors">
             </select>
           </div>
           <button type="submit" class="btn btn-default" ng-click="task()">Task</button>

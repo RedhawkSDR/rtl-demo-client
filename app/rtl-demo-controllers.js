@@ -8,6 +8,7 @@ angular.module('rtl-demo-controllers', ['rtl-rest'])
       function($scope, rtl){
         $scope.survey = rtl.survey;
         $scope.device = rtl.device;
+        $scope.processors = rtl.processors;
 
         $scope.task = function(){
           $scope.survey.task($scope.form['frequency'], $scope.form['processing']);
