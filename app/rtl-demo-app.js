@@ -4,7 +4,7 @@
  *
  * Created by Rob Cannon on 8/29/14.
  **/
-angular.module('rtl-demo-app', ['ngRoute', 'rtl-demo-controllers', 'rtl-rest', 'rtl-rest-directives'])
+angular.module('rtl-demo-app', ['ngRoute', 'rtl-demo-controllers', 'rtl-rest', 'rtl-rest-directives', 'rtl-plots'])
     .config(['$routeProvider',
       function($routeProvider) {
         $routeProvider
