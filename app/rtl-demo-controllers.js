@@ -17,7 +17,6 @@ angular.module('rtl-demo-controllers', ['rtl-rest'])
 
         $scope.$watch('survey.frequency', function(freq) {
           if(freq && !$scope.form.frequency) {
-            console.log("Setting Frequency to "+freq);
             $scope.form.frequency = freq;
           }
         });
@@ -25,7 +24,6 @@ angular.module('rtl-demo-controllers', ['rtl-rest'])
         $scope.$watch('survey.processing', function(processing) {
           if(!$scope.form.processing) {
             $scope.form.processing = processing ? processing : $scope.processors[0];
-            console.log("Setting processing to "+$scope.form.processing);
           }
         });
 
