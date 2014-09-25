@@ -58,15 +58,14 @@
           <div class="form-group">
             <label class="sr-only" for="frequency">Frequency</label>
             <div class="input-group">
-              <input type="text" class="form-control" id="frequency" placeholder="Frequency" ng-model="form['frequency']"/>
+              <input type="text" class="form-control" id="frequency" placeholder="Frequency" ng-model="form.frequency"/>
               <div class="input-group-addon">MHz</div>
             </div>
           </div>
           <div class="form-group">
             <label class="sr-only" for="processing">Processing</label>
             <select
-                ng-model="form['processing']"
-                ng-init="form['processing'] = survey.processing ? survey.processing : processors[0]"
+                ng-model="form.processing"
                 class="form-control"
                 id="processing"
                 ng-options="p for p in processors">

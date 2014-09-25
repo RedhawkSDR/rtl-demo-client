@@ -52,7 +52,7 @@ angular.module('rtl-rest', ['ngResource', 'toastr', 'ngAnimate'])
           self._load = function() {
             RTLRest.survey.status(function(data){
               if(data.hasOwnProperty('availableProcessing'))
-                rtl.processors = data['availableProcessing'];
+                angular.copy(data['availableProcessing'], rtl.processors);
               self._update(data['status']);
             })
           };
