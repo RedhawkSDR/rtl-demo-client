@@ -4,7 +4,7 @@
  *
  * Created by rxc on 8/29/14.
  **/
-angular.module('rtl-rest', ['ngResource', 'toastr', 'ngAnimate'])
+angular.module('rtl-rest', ['ngResource', 'toastr', 'ngAnimate', 'SubscriptionSocketService'])
     .config(function(toastrConfig) {
       angular.extend(toastrConfig, {
         positionClass: 'toast-bottom-right'
@@ -27,8 +27,8 @@ angular.module('rtl-rest', ['ngResource', 'toastr', 'ngAnimate'])
 
       }
     ])
-    .factory('rtl', ['RTLRest', 'toastr',
-      function(RTLRest, toastr) {
+    .factory('rtl', ['RTLRest', 'toastr', 'SubscriptionSocket',
+      function(RTLRest, toastr, SubscriptionSocket) {
 
         var log = {
           info:  function(txt) { console.log('INFO:  '+txt); },
@@ -100,7 +100,19 @@ angular.module('rtl-rest', ['ngResource', 'toastr', 'ngAnimate'])
         var Device = function() {
           var self = this;
 
-          self._update = function(data) { angular.extend(self, data); };
+          self._update = function(data) {
+            if('status' in data && data['status'] != self.status) {
+              var name = data['type'].toUpperCase();
+              if(data['status'] == 'ready')
+                toastr.success(name + " is ready.", 'Device');
+              else if(data['status'] == 'unavailable')
+                toastr.error(name + " is unavailable.", 'Device');
+              else
+                log.warn("Unknown device status of '"+data['status']+" for "+name);
+            }
+
+            angular.extend(self, data);
+          };
           self._load = function() {
             RTLRest.device.status(function(data){
               self._update(data);
@@ -113,6 +125,28 @@ angular.module('rtl-rest', ['ngResource', 'toastr', 'ngAnimate'])
 
         rtl.survey = new Survey();
         rtl.device = new Device();
+
+        var statusSocket = SubscriptionSocket.createNew();
+
+        statusSocket.addJSONListener(function(data){
+          if('type' in data && 'body' in data) {
+            if(data['type'] == 'device') {
+              rtl.device._update(data['body']);
+            } else if(data['type'] == 'survey') {
+              rtl.survey._update(data['body']);
+            } else {
+              log.error("Unhandled Status Notification of type '" + data['type'] + "'"
+                        + JSON.stringify(data['body']))
+            }
+          } else {
+            log.error("Status Notification missing 'type' and/or 'body'"+JSON.stringify(data))
+          }
+        });
+
+        statusSocket.connect('/rtl/status', function(){
+          console.log("Connected to Status");
+        });
+
         return rtl;
       }
     ])
