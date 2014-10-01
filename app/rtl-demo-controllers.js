@@ -9,6 +9,10 @@ angular.module('rtl-demo-controllers', ['rtl-rest'])
         $scope.survey = rtl.survey;
         $scope.device = rtl.device;
         $scope.processors = rtl.processors;
+        $scope.doTune = function(cf) {
+            $scope.form.frequency = cf / 1e6;
+            $scope.task();
+        };
 
         $scope.form = {
           frequency: undefined,
