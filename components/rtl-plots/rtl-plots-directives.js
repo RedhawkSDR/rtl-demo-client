@@ -87,7 +87,7 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
                 gridBackground: ["rgba(255,255,255,1", "rgba(238,238,238,1"],
                 fillStyle: ["rgba(224, 255, 194, 0.0)", "rgba(0, 153, 51, 0.7)", "rgba(0, 0, 0, 1.0)"]
               });
-              layer = plot.overlay_array(null, angular.extend(settings, {'format': format}));
+              layer = plot.overlay_array(null, angular.extend(defaultSettings, {'format': format}));
             };
 
             var setLayer = function(layer, settings) {
