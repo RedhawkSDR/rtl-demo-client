@@ -7,7 +7,7 @@
     </div>
   </div>
 
-  <div class="row">
+  <div ng-if="running" class="row">
     <div class="col-sm-8">
 
       <div class="well well-sm text-center">
@@ -32,7 +32,7 @@
     </div>
   </div>
 
-  <div class="row">
+  <div ng-show="running" class="row">
     <div class="col-sm-4 col-sm-offset-2">
 
       <h4 class="text-center">Frequency</h4>
@@ -53,7 +53,8 @@
 
   <div class="row">
     <div class="col-sm-9 col-sm-offset-3">
-      <div class="center-block">
+      <div ng-show="ready" class="center-block">
+
         <form class="form-inline" role="form">
           <div class="form-group">
             <label class="sr-only" for="frequency">Frequency</label>
@@ -74,8 +75,33 @@
           <button type="submit" class="btn btn-default" ng-click="task()">Task</button>
           <button class="btn btn-danger" ng-click="halt()">Halt</button>
         </form>
-      </div>
 
+      </div>
     </div>
   </div>
+
+</div>
+
+
+
+<div ng-hide="ready">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-8 col-md-offset-2">
+
+        <div class="panel panel-danger">
+          <div class="panel-heading">
+            Device Error
+          </div>
+          <div class="panel-body bg-danger text-center">
+            <h2><i class="fa fa-5x fa-meh-o"></i></h2>
+            <h3>The {{device.type | uppercase}} is currently {{device.status}}.</h3>
+            <p>If the device is unplugged, please plug it in.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
 </div>

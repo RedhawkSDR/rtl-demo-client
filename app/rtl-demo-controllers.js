@@ -14,6 +14,13 @@ angular.module('rtl-demo-controllers', ['rtl-rest'])
             $scope.task();
         };
 
+        $scope.$watch('device.status', function(status) {
+          $scope.ready = (status == 'ready');
+        });
+        $scope.$watch('survey.processing', function(processing) {
+          $scope.running = (processing != null);
+        });
+
         $scope.form = {
           frequency: undefined,
           processing: undefined
