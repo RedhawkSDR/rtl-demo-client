@@ -50,11 +50,17 @@ angular.module('rtl-rest', ['ngResource', 'toastr', 'ngAnimate', 'SubscriptionSo
             angular.extend(self, data);
           };
           self._load = function() {
-            RTLRest.survey.status(function(data){
+            RTLRest.survey.status(
+              function(data){
               if(data.hasOwnProperty('availableProcessing'))
                 angular.copy(data['availableProcessing'], rtl.processors);
               self._update(data['status']);
-            })
+              },
+              function(resp){
+                rtl.connected = false;
+                log.error("Failed to get survey status "+resp.status+": "+resp.statusText)
+              }
+            );
           };
           self._reload = function(){ self._load(); };
 
@@ -114,15 +120,22 @@ angular.module('rtl-rest', ['ngResource', 'toastr', 'ngAnimate', 'SubscriptionSo
             angular.extend(self, data);
           };
           self._load = function() {
-            RTLRest.device.status(function(data){
-              self._update(data);
-            });
+            RTLRest.device.status(
+              function(data){
+                self._update(data);
+              },
+              function(resp){
+                rtl.connected = false;
+                log.error("Failed to get device status "+resp.status+": "+resp.statusText)
+              }
+            );
           };
           self._reload = function(){ self._load(); };
 
           self._load();
         };
 
+        rtl.connected = true;
         rtl.survey = new Survey();
         rtl.device = new Device();
 

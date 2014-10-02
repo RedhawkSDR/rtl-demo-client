@@ -6,6 +6,7 @@
 angular.module('rtl-demo-controllers', ['rtl-rest'])
     .controller('Overview', ['$scope', 'rtl',
       function($scope, rtl){
+        $scope.connected = rtl.connected;
         $scope.survey = rtl.survey;
         $scope.device = rtl.device;
         $scope.processors = rtl.processors;

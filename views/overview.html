@@ -89,7 +89,28 @@
 
 </div>
 
-<div ng-hide="ready">
+<div ng-hide="connected">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-8 col-md-offset-2">
+
+        <div class="panel panel-danger">
+          <div class="panel-heading">
+            Connection Error
+          </div>
+          <div class="panel-body bg-danger text-center">
+            <h2><i class="fa fa-5x fa-meh-o"></i></h2>
+            <h3>Unable to connect to the backend server.</h3>
+            <p>Try typing <code>sudo service redhawk-web start</code> in the command-line.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<div ng-hide="ready || !connected">
   <div class="container">
     <div class="row">
       <div class="col-md-8 col-md-offset-2">
@@ -108,5 +129,4 @@
       </div>
     </div>
   </div>
-
 </div>
