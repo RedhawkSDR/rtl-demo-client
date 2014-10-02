@@ -409,6 +409,8 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
               autox: 3,
               autohide_panbars: true,
               cmode: "D2", //20Log
+              gridBackground: ["rgba(255,255,255,1", "rgba(200,200,200,1"],
+              xi: true
 //              colors: {bg: "rgba(255,255,255,1)", fg: "rgba(0,0,0,1)"}
             });
             if (scope.url.indexOf('psd/wideband') >= 0) {
@@ -419,8 +421,8 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
             layer = plot.overlay_pipe(angular.extend(settings, {type: 2000, 'format': format, pipe: true, pipesize: 1024 * 1024 * 5, yunits: 28}));
             accordion = new sigplot.AccordionPlugin({
               draw_center_line: true,
-              shade_area: false,
-              draw_edge_lines: false,
+              shade_area: true,
+              draw_edge_lines: true,
               direction: "vertical",
               edge_line_style: {strokeStyle: "#FF0000"}
             });
@@ -612,12 +614,12 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
 
           var reloadPlot = function(data) {
             if (reloadSri) {
-              plot.reload(layer, data, scope.plotSettings);
+              plot.push(layer, data, scope.plotSettings);
               plot.refresh();
               plot._Gx.ylab = 27; //this is a hack, but the only way I can get sigplot to take the value
               reloadSri = false;
             } else {
-              plot.reload(layer, data);
+              plot.push(layer, data);
               plot._Gx.ylab = 27; //this is a hack, but the only way I can get sigplot to take the value
             }
           };
