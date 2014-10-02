@@ -15,6 +15,8 @@ angular.module('rtl-demo-controllers', ['rtl-rest'])
             $scope.task();
         };
 
+        // Default to the device being ready unless we hear otherwise
+        $scope.ready = true;
         $scope.$watch('device.status', function(status) {
           $scope.ready = (status == 'ready');
         });
