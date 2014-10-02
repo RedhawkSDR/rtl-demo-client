@@ -13,6 +13,14 @@
     margin: 0;
 }
 
+.rhweb-plot-title {
+    margin-left: 25px;
+    margin-bottom: 0;
+    padding: 0;
+    font-weight: bold;
+    font-size: smaller;
+}
+
 .well {
     background-color: white;
 }
