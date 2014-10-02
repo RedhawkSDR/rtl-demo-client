@@ -87,27 +87,28 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
                   autox: 3,
                   //autol: 50,
                   autoy: 3,
+                  colors: {bg: "#f5f5f5", fg: "#000"},
                   gridBackground: ["rgba(255,255,255,1", "rgba(200,200,200,1"],
                   all: true,
-                  xi: true,
                   cmode: "D2", //20Log
                   fillStyle: ["rgba(224, 255, 194, 0.0)", "rgba(0, 153, 51, 0.7)", "rgba(0, 0, 0, 1.0)"]
               });
 
               plot.addListener('mdown', plotMDownListener);
               plot.addListener('mup', plotMupListener);
+
               layer = plot.overlay_array(null, angular.extend(defaultSettings, {'format': format}));
             };
 
               var lastMouseDown = {
                   x: undefined,
                   y: undefined
-              }
+              };
 
               var plotMDownListener = function(event) {
                   lastMouseDown.x = event.x;
                   lastMouseDown.y = event.y;
-              }
+              };
 
               var clickTolerance = 100;
               var plotMupListener = function(event) {
@@ -117,7 +118,7 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
                   } else if (event.which == 3) {
                       dragTune(event);
                   }
-              }
+              };
 
               var dragTune = function(event) {
                   if (lastMouseDown.x && lastMouseDown.y) {
