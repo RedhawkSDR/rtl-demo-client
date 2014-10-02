@@ -15,6 +15,16 @@ angular.module('rtl-demo-controllers', ['rtl-rest'])
             $scope.task();
         };
 
+        $scope.widebandMode = "line";
+        $scope.setWidebandMode = function(mode) {
+          $scope.widebandMode = mode;
+        };
+
+        $scope.detailPlotMode = "demod_freq";
+        $scope.setDetailPlotMode = function(mode) {
+          $scope.detailPlotMode = mode;
+        };
+
         // Default to the device being ready unless we hear otherwise
         $scope.ready = true;
         $scope.$watch('device.status', function(status) {

@@ -21,9 +21,9 @@
 .rhweb-plot-title {
     margin-left: 25px;
     margin-bottom: 0;
-    padding: 0;
+    padding: 0 0 5px 3px;
     font-weight: bold;
-    font-size: smaller;
+    /*font-size: small;*/
 }
 
 .well {

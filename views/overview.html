@@ -9,15 +9,26 @@
 
   <div ng-if="running" class="row">
     <div class="col-sm-12">
-      <p class="rhweb-plot-title">Wideband</p>
-      <div class="well well-sm text-center">
-        <rtl-plot do-tune="doTune(cf)"
-            width="auto" height="300px"
-            type="float"
-            url="/rtl/output/psd/wideband">
-         </rtl-plot>
+      <div class="btn-group btn-group-xs pull-right">
+        <button class="btn btn-default" ng-class="{'btn-primary': widebandMode == 'line'}" ng-click="setWidebandMode('line')">Line</button>
+        <button class="btn btn-default" ng-class="{'btn-primary': widebandMode == 'raster'}" ng-click="setWidebandMode('raster')">Raster</button>
       </div>
+      <p class="rhweb-plot-title">Wideband</p>
 
+      <div class="well well-sm text-center">
+        <div ng-if="widebandMode == 'line'">
+          <rtl-plot do-tune="doTune(cf)"
+              width="auto" height="300px"
+              type="float"
+              url="/rtl/output/psd/wideband">
+           </rtl-plot>
+        </div>
+        <div ng-if="widebandMode == 'line'">
+
+          <!-- Replace these comments with Raster plot -->
+
+        </div>
+      </div>
     </div>
 
   </div>
@@ -76,13 +87,36 @@
 
   <div ng-if="running" class="row">
     <div class="col-sm-8 col-sm-offset-2">
-      <p class="rhweb-plot-title">Demod</p>
+      <div class="btn-group btn-group-xs pull-right">
+        <button class="btn btn-default" ng-class="{'btn-primary': detailPlotMode == 'narrowband'}" ng-click="setDetailPlotMode('narrowband')">Narrowband</button>
+        <button class="btn btn-default" ng-class="{'btn-primary': detailPlotMode == 'demod_freq'}" ng-click="setDetailPlotMode('demod_freq')">Demod (Frequency)</button>
+        <button class="btn btn-default" ng-class="{'btn-primary': detailPlotMode == 'demod_time'}" ng-click="setDetailPlotMode('demod_time')">Demod (Time)</button>
+      </div>
+      <p class="rhweb-plot-title">Detail</p>
       <div class="well well-sm text-center">
-        <rtl-plot do-tune="doTune(cf)"
-                  width="auto" height="300px"
-                  type="float"
-                  url="/rtl/output/psd/fm">
-        </rtl-plot>
+        <div ng-if="detailPlotMode == 'narrowband'">
+
+          <rtl-plot do-tune="doTune(cf)"
+                    width="auto" height="300px"
+                    type="float"
+                    url="/rtl/output/psd/narrowband">
+          </rtl-plot>
+
+        </div>
+        <div ng-if="detailPlotMode == 'demod_freq'">
+
+          <rtl-plot do-tune="doTune(cf)"
+                    width="auto" height="300px"
+                    type="float"
+                    url="/rtl/output/psd/fm">
+          </rtl-plot>
+
+        </div>
+        <div ng-if="detailPlotMode == 'demod_time'">
+
+          <!-- Replace these comments with demod_time plot -->
+
+        </div>
       </div>
 
     </div>
