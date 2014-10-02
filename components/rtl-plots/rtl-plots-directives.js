@@ -99,6 +99,7 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
               plot.addListener('mup', plotMupListener);
 
               layer = plot.overlay_array(null, angular.extend(defaultSettings, {'format': format}));
+              //modifyWarpboxBehavior(plot);
             };
 
               var lastMouseDown = {
@@ -136,11 +137,14 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
               };
 
               var showHighlight = function (cf) {
-                  var factor = 1;
-                  if (scope.url.indexOf('narrowband') >= 0) {
+                  var factor = 1; //default unit is MHz
+                  if (scope.url.indexOf('psd/narrowband') >= 0) {
                       cf = 0; //complex data
                       bw = 18e3; //TFD_2 BW
                       factor = 3;//Unit is KHz
+                  }
+                  if (scope.url.indexOf('psd/fm') >= 0) {
+                    bw = 18e3; //TFD_2 BW
                   }
                   if (plot && cf !== undefined) {
                       plot.get_layer(layer).remove_highlight('subBand');
@@ -162,6 +166,8 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
 
             //var ignoreNewXStart;
 
+            var mode = undefined;
+
             var updatePlotSettings = function(data) {
               var isDirty = false;
                 var cf = data.keywords.CHAN_RF;
@@ -182,7 +188,6 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
               scope.plotSettings['size'] = lastDataSize * scope.plotSettings['xdelta'];
 
               if (!plot) {
-                var mode = undefined;
                 switch (data.mode) {
                   case 0:
                     mode = "S";
@@ -196,11 +201,11 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
                 if (mode) {
                   switch (scope.type) {
                     case "float":
-                      createPlot(mode + "F", scope.plotSettings);
+                      createPlot(mode + "F", defaultSettings);
                       console.log("Create plots with format " + mode + "F");
                       break;
                     case "double":
-                      createPlot(mode + "D", scope.plotSettings);
+                      createPlot(mode + "D", defaultSettings);
                       console.log("Create plots with format " + mode + "D");
                       break;
                     default:
@@ -220,31 +225,100 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
             };
 
             var dataConverter = plotDataConverter(scope.type);
-            var lastDataSize = 1000;
+            var lastDataSize;
+
+            var reported = 0;
 
             var on_data = function(data) {
-              switch (data.byteLength) {
-                  case 1048576:
-                      data = data.slice(0, data.byteLength / 8);
-                      break;
-                  case 917504:
-                      data = data.slice(0, data.byteLength / 7);
-                      break;
+              var bps;
+              switch (scope.type) {
+                case 'double':
+                  bps = 2;
+                  break;
+                case 'float':
+                  bps = 4;
+                  break;
+                default:
+                  return;
               };
-              var array = dataConverter(data);
 
-              lastDataSize = array.length;
+              var bpe;
+              switch (mode) {
+                case 'S':
+                  bpe = bps;
+                  break;
+                case 'C':
+                  bpe = bps * 2;
+                  break;
+                default:
+                  return;
+              }
 
-              if (plot) {
-                  if (reloadSri) {
-                      plot.reload(layer, array, scope.plotSettings);
-                      plot.refresh();
-                      plot._Gx.ylab = 27; //this is a hack, but the only way I can get sigplot to take the value
-                      reloadSri = false;
-                  } else {
-                      plot.reload(layer, array);
-                      plot._Gx.ylab = 27; //this is a hack, but the only way I can get sigplot to take the value
-                  } }
+              var frameSize = scope.plotSettings.subsize * bpe;
+              var numFrames = Math.floor(data.byteLength / frameSize );
+              if (reported <= 5) {
+                console.log(scope.url + ': subsze: ' + scope.plotSettings.subsize + ' numBytes: ' + data.byteLength + ' numFrames: ' + numFrames + ' frameSize: ' + frameSize);
+                reported++;
+              }
+              for (var i = 0; i <= frameSize * (numFrames - 1); i+= frameSize) {
+                data = data.slice(i, i + frameSize);
+                var array = dataConverter(data);
+                lastDataSize = array.length;
+                if (plot) {
+                  if (reported <= 5) {
+                    console.log('plotting data from index ' + i + " to " + (i+frameSize));
+                  }
+                  reloadPlot(array);
+                }
+              }
+            };
+
+            var reloadPlot = function(data) {
+              if (reloadSri) {
+                plot.reload(layer, data, scope.plotSettings);
+                plot.refresh();
+                plot._Gx.ylab = 27; //this is a hack, but the only way I can get sigplot to take the value
+                reloadSri = false;
+              } else {
+                plot.reload(layer, data);
+                plot._Gx.ylab = 27; //this is a hack, but the only way I can get sigplot to take the value
+              }
+            };
+
+            var modifyWarpboxBehavior = function(plot) {
+              plot._Mx.onmouseup = (function(Mx) {
+                alert('yay warpbox');
+                return function(event) {
+                  if (Mx.warpbox) {
+                    mx.onWidgetLayer(Mx, function() {
+                      mx.erase_window(Mx);
+                    });
+
+                    var old_warpbox = Mx.warpbox;
+                    Mx.warpbox = undefined;
+
+                    if (event.which === 1 || event.which === 3) {
+                      if (old_warpbox.func) {
+                        var xo = old_warpbox.xo;
+                        var yo = old_warpbox.yo;
+                        var xl = old_warpbox.xl;
+                        var yl = old_warpbox.yl;
+
+                        if (old_warpbox.mode === "vertical") {
+                          xo = Mx.l;
+                          xl = Mx.r;
+                        } else if (old_warpbox.mode === "horizontal") {
+                          yo = Mx.t;
+                          yl = Mx.b;
+                        } // else "box"
+                        old_warpbox.func(event, xo, yo, xl, yl, old_warpbox.style.return_value);
+                      }
+                    }
+
+                  }
+                  mx.widget_callback(Mx, event);
+                };
+              })(Mx);
             };
 
             if(on_data)

@@ -19,6 +19,18 @@
       </div>
 
     </div>
+
+    <div class="col-sm-4">
+
+      <div class="well well-sm text-center">
+        <rtl-plot do-tune="doTune(cf)"
+            width="auto" height="300px"
+            type="float"
+            url="/rtl/output/psd/fm">
+        </rtl-plot>
+      </div>
+
+    </div>
   </div>
 
   <div ng-show="running" class="row">
