@@ -64,13 +64,17 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
           link: function (scope, element, attrs) {
             var socket = SubscriptionSocket.createNew();
 
-            var plot, layer;
+            var plot, layer, accordion;
 
             var bw = 100000;
 
+            var spectrumBw = 2e6;
+
+            var tunedFreq;
+
             var defaultSettings = {
               xdelta:10.25390625,
-              xstart: 100E6,
+              xstart: -1,//ensure change is detected with first SRI
               xunits: 3,
               ydelta : 0.09752380952380953,
               ystart: 0,
@@ -79,7 +83,6 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
               size: 32768,
               format: 'SF' };
               scope.plotSettings = angular.copy(defaultSettings);
-            //scope.plotSettings = angular.extend(scope.plotSettings, scope.settings);
 
             var createPlot = function(format, settings) {
               plot = new sigplot.Plot(element[0].firstChild, {
@@ -88,17 +91,23 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
                   //autol: 50,
                   autoy: 3,
 //                  colors: {bg: "#f5f5f5", fg: "#000"},
-                xi: true,
+                  xi: true,
                   gridBackground: ["rgba(255,255,255,1", "rgba(200,200,200,1"],
                   all: true,
                   cmode: "D2", //20Log
                   fillStyle: ["rgba(224, 255, 194, 0.0)", "rgba(0, 153, 51, 0.7)", "rgba(0, 0, 0, 1.0)"]
               });
 
-              plot.addListener('mdown', plotMDownListener);
-              plot.addListener('mup', plotMupListener);
-
               layer = plot.overlay_array(null, angular.extend(defaultSettings, {'format': format}));
+              accordion = new sigplot.AccordionPlugin({
+                draw_center_line: true,
+                shade_area: false,
+                draw_edge_lines: false,
+                direction: "vertical",
+                edge_line_style: {strokeStyle: "#FF0000"}
+              });
+
+              plot.add_plugin(accordion, layer + 1);
               //modifyWarpboxBehavior(plot);
             };
 
@@ -112,14 +121,17 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
                   lastMouseDown.y = event.y;
               };
 
-              var clickTolerance = 100;
+              var clickTolerance = 200;
               var plotMupListener = function(event) {
-                  if (Math.abs(event.x - lastMouseDown.x) <= clickTolerance) {
-                      console.log("Tuned to " + event.x / 1000  + " KHz");
-                      scope.doTune({cf:event.x});
-                  } else if (event.which == 3) {
-                      dragTune(event);
+                if (Math.abs(event.x - lastMouseDown.x) <= clickTolerance && event.which === 1) {
+                  if (inPlotBounds(event.x, event.y)) {
+                    console.log("Tuned to " + event.x / 1000 + " KHz");
+                    scope.doTune({cf: event.x});
                   }
+                } else if (Math.abs(event.x - lastMouseDown.x) >= clickTolerance && event.which == 3) {
+                  //disable drag tuning until warpbox can be drawn
+                  //dragTune(event);
+                }
               };
 
               var dragTune = function(event) {
@@ -136,33 +148,46 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
                   }
               };
 
+            var inPlotBounds = function(x, y) {
+              var zoomStack = plot._Mx.stk[plot._Mx.stk.length - 1];
+              var xmin = zoomStack.xmin;
+              var xmax = zoomStack.xmax;
+              var ymin = zoomStack.ymin;
+              var ymax = zoomStack.ymax;
+              //if clicking on x position > xmax, x will be set to xmax. Same for y values
+              if (x >= xmax || x <= xmin || y >= ymax || y <= ymin) {
+                return false;
+              }
+              return true;
+            }
+
               var showHighlight = function (cf) {
-                  var factor = 1; //default unit is MHz
-                  if (scope.url.indexOf('psd/narrowband') >= 0) {
-                      cf = 0; //complex data
-                      bw = 18e3; //TFD_2 BW
-                      factor = 3;//Unit is KHz
+                tunedFreq = cf;//used in wideband plot to determine min/max x values in mouse listeners
+                if (scope.url.indexOf('psd/narrowband') >= 0) {
+                  cf = 0;
+                  bw = 100e3//TODO get value from TuneFilterDecimate component
+                }
+                if (plot && cf !== undefined) {
+                  if (scope.url.indexOf('psd/wideband') >= 0 || scope.url.indexOf('psd/narrowband') >= 0) {
+                    plot.get_layer(layer).remove_highlight('subBand');
+                    plot.get_layer(layer).add_highlight(
+                      {
+                        xstart: cf - bw / 2,
+                        xend: cf + bw / 2,
+                        color: 'rgba(255,50,50,1)',
+                        id: 'subBand'
+                      }
+                    );
+                    accordion.set_center(cf);
+                    accordion.set_width(bw);
                   }
-                  if (scope.url.indexOf('psd/fm') >= 0) {
-                    bw = 18e3; //TFD_2 BW
-                  }
-                  if (plot && cf !== undefined) {
-                      plot.get_layer(layer).remove_highlight('subBand');
-                      plot.get_layer(layer).add_highlight(
-                          {
-                              xstart: cf - bw / 2 * factor,
-                              xend: cf + bw / 2 * factor,
-                              color: 'rgba(255,50,50,1)',
-                              id: 'subBand'
-                          }
-                      );
-                  }
+                }
 
               };
 
             var reloadSri;
             var lastCf;
-            var lastXDelta = 0;
+            var lastXStart = -1;
 
             //var ignoreNewXStart;
 
@@ -170,17 +195,18 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
 
             var updatePlotSettings = function(data) {
               var isDirty = false;
-                var cf = data.keywords.CHAN_RF;
-                var xdelt = data.xdelta;
-                if (Math.abs(lastXDelta - xdelt) >= 0) {
-                    lastXDelta = xdelt;
-                    showHighlight(cf);
-                    isDirty = true;
-                }
+              var cf = data.keywords.CHAN_RF;
+              var xstart = data.xstart;
+              if (Math.abs(lastXStart - xstart) >= 0) {
+                console.log(scope.url + ' xstart: ' + xstart);
+                lastXStart = xstart;
+                showHighlight(cf);
+                isDirty = true;
+              }
               angular.forEach(data, function(item, key){
-                if (angular.isDefined(scope.plotSettings[key]) && !angular.equals(scope.plotSettings[key], item) && item != 0) {
+                if (angular.isDefined(scope.plotSettings[key]) && !angular.equals(scope.plotSettings[key], item)) {
                   isDirty = true;
-                  console.log("Plot settings change "+key+": "+scope.plotSettings[key]+" -> "+item);
+                  console.log(scope.url + ": Plot settings change "+key+": "+scope.plotSettings[key]+" -> "+item);
                   scope.plotSettings[key] = item;
                 }
               });
@@ -210,13 +236,13 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
                       break;
                     default:
                   }
-                    showHighlight();
+                  showHighlight(cf);
                   isDirty = true;
                 }
               }
 
               if(isDirty) {
-                  reloadSri = true;
+                reloadSri = true;
               }
             };
 
@@ -260,7 +286,9 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
                 console.log(scope.url + ': subsze: ' + scope.plotSettings.subsize + ' numBytes: ' + data.byteLength + ' numFrames: ' + numFrames + ' frameSize: ' + frameSize);
                 reported++;
               }
-              for (var i = 0; i <= frameSize * (numFrames - 1); i+= frameSize) {
+              //workaround: take ony first frame, as loading frames seriatum seems to not work
+              //back-end will be modified to send only one frame
+              for (var i = 0; i < frameSize /** (numFrames - 1)*/; i+= frameSize) {
                 data = data.slice(i, i + frameSize);
                 var array = dataConverter(data);
                 lastDataSize = array.length;
