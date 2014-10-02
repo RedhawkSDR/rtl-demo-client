@@ -87,7 +87,8 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
                   autox: 3,
                   //autol: 50,
                   autoy: 3,
-                  colors: {bg: "#f5f5f5", fg: "#000"},
+//                  colors: {bg: "#f5f5f5", fg: "#000"},
+                xi: true,
                   gridBackground: ["rgba(255,255,255,1", "rgba(200,200,200,1"],
                   all: true,
                   cmode: "D2", //20Log

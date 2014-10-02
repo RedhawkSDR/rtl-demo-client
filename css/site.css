@@ -1,0 +1,22 @@
+.rhweb-page-title {
+    padding: 10px;
+    margin: 0;
+}
+
+.rhweb-survey-controls {
+    padding: 10px;
+    margin-bottom: 20px;
+}
+
+.rhweb-display-values {
+    padding: 10px;
+    margin: 0;
+}
+
+.well {
+    background-color: white;
+}
+
+body {
+    background-color: #eeeeee;
+}
