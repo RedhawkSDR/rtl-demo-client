@@ -198,10 +198,8 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
               };
 
             var reloadSri;
-            var lastCf;
             var lastXStart = -1;
 
-            //var ignoreNewXStart;
 
             var mode = undefined;
 
@@ -217,7 +215,6 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
               angular.forEach(data, function(item, key){
                 if (angular.isDefined(scope.plotSettings[key]) && !angular.equals(scope.plotSettings[key], item)) {
                   isDirty = true;
-//                  console.log(scope.url + ": Plot settings change "+key+": "+scope.plotSettings[key]+" -> "+item);
                   scope.plotSettings[key] = item;
                 }
               });
@@ -264,8 +261,6 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
             var dataConverter = plotDataConverter(scope.type);
             var lastDataSize;
 
-            var reported = 0;
-
             var on_data = function(data) {
               var bps;
               switch (scope.type) {
@@ -293,10 +288,6 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
 
               var frameSize = scope.plotSettings.subsize * bpe;
               var numFrames = Math.floor(data.byteLength / frameSize );
-//              if (reported <= 5) {
-//                console.log(scope.url + ': subsze: ' + scope.plotSettings.subsize + ' numBytes: ' + data.byteLength + ' numFrames: ' + numFrames + ' frameSize: ' + frameSize);
-//                reported++;
-//              }
               //workaround: take ony first frame, as loading frames seriatum seems to not work
               //back-end will be modified to send only one frame
               for (var i = 0; i < frameSize /** (numFrames - 1)*/; i+= frameSize) {
@@ -304,9 +295,6 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
                 var array = dataConverter(data);
                 lastDataSize = array.length;
                 if (plot) {
-//                  if (reported <= 5) {
-//                    console.log('plotting data from index ' + i + " to " + (i+frameSize));
-//                  }
                   reloadPlot(array);
                 }
               }
@@ -395,8 +383,6 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
           var plot, layer, accordion;
 
           var bw = 100000;
-
-          var spectrumBw = 2e6;
 
           var tunedFreq;
 
@@ -505,10 +491,7 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
           };
 
           var reloadSri;
-          var lastCf;
           var lastXStart = -1;
-
-          //var ignoreNewXStart;
 
           var mode = undefined;
 
@@ -572,8 +555,6 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
           var dataConverter = plotDataConverter(scope.type);
           var lastDataSize;
 
-          var reported = 0;
-
           var on_data = function(data) {
               var snd = new Audio("data:audio/wav," + data);
               snd.play();
@@ -603,10 +584,6 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
 
             var frameSize = scope.plotSettings.subsize * bpe;
             var numFrames = Math.floor(data.byteLength / frameSize );
-//            if (reported <= 5) {
-//              console.log(scope.url + ': subsze: ' + scope.plotSettings.subsize + ' numBytes: ' + data.byteLength + ' numFrames: ' + numFrames + ' frameSize: ' + frameSize);
-//              reported++;
-//            }
             //workaround: take ony first frame, as loading frames seriatum seems to not work
             //back-end will be modified to send only one frame
             for (var i = 0; i < frameSize /** (numFrames - 1)*/; i+= frameSize) {
@@ -614,9 +591,6 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
               var array = dataConverter(data);
               lastDataSize = array.length;
               if (plot) {
-//                if (reported <= 5) {
-//                  console.log('plotting data from index ' + i + " to " + (i+frameSize));
-//                }
                 reloadPlot(array);
               }
             }
