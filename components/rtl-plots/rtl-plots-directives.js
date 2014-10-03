@@ -84,19 +84,31 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
               format: 'SF' };
               scope.plotSettings = angular.copy(defaultSettings);
 
-            var createPlot = function(format, settings) {
-              plot = new sigplot.Plot(element[0].firstChild, {
+              var plotOptions = {
                   autohide_panbars: true,
                   autox: 3,
                   //autol: 50,
                   autoy: 3,
+                  legend: false,
+                  xcnt: false,
 //                  colors: {bg: "#f5f5f5", fg: "#000"},
                   xi: true,
                   gridBackground: ["rgba(255,255,255,1", "rgba(200,200,200,1"],
                   all: true,
                   cmode: "D2", //20Log
                   fillStyle: ["rgba(224, 255, 194, 0.0)", "rgba(0, 153, 51, 0.7)", "rgba(0, 0, 0, 1.0)"]
-              });
+              };
+
+              if (scope.url.indexOf('psd/fm') >= 0 || scope.url.indexOf('psd/narrowband') >= 0) {
+                  plotOptions.noreadout = true;
+              }
+
+            var createPlot = function(format, settings) {
+              plot = new sigplot.Plot(element[0].firstChild, plotOptions);
+              if (scope.url.indexOf('psd/wideband') >= 0) {
+                plot.addListener('mdown', plotMDownListener);
+                plot.addListener('mup', plotMupListener);
+              }
 
               layer = plot.overlay_array(null, angular.extend(defaultSettings, {'format': format}));
               accordion = new sigplot.AccordionPlugin({
@@ -198,7 +210,6 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
               var cf = data.keywords.CHAN_RF;
               var xstart = data.xstart;
               if (Math.abs(lastXStart - xstart) >= 0) {
-                console.log(scope.url + ' xstart: ' + xstart);
                 lastXStart = xstart;
                 showHighlight(cf);
                 isDirty = true;
@@ -206,7 +217,7 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
               angular.forEach(data, function(item, key){
                 if (angular.isDefined(scope.plotSettings[key]) && !angular.equals(scope.plotSettings[key], item)) {
                   isDirty = true;
-                  console.log(scope.url + ": Plot settings change "+key+": "+scope.plotSettings[key]+" -> "+item);
+//                  console.log(scope.url + ": Plot settings change "+key+": "+scope.plotSettings[key]+" -> "+item);
                   scope.plotSettings[key] = item;
                 }
               });
@@ -282,10 +293,10 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
 
               var frameSize = scope.plotSettings.subsize * bpe;
               var numFrames = Math.floor(data.byteLength / frameSize );
-              if (reported <= 5) {
-                console.log(scope.url + ': subsze: ' + scope.plotSettings.subsize + ' numBytes: ' + data.byteLength + ' numFrames: ' + numFrames + ' frameSize: ' + frameSize);
-                reported++;
-              }
+//              if (reported <= 5) {
+//                console.log(scope.url + ': subsze: ' + scope.plotSettings.subsize + ' numBytes: ' + data.byteLength + ' numFrames: ' + numFrames + ' frameSize: ' + frameSize);
+//                reported++;
+//              }
               //workaround: take ony first frame, as loading frames seriatum seems to not work
               //back-end will be modified to send only one frame
               for (var i = 0; i < frameSize /** (numFrames - 1)*/; i+= frameSize) {
@@ -293,24 +304,24 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
                 var array = dataConverter(data);
                 lastDataSize = array.length;
                 if (plot) {
-                  if (reported <= 5) {
-                    console.log('plotting data from index ' + i + " to " + (i+frameSize));
-                  }
+//                  if (reported <= 5) {
+//                    console.log('plotting data from index ' + i + " to " + (i+frameSize));
+//                  }
                   reloadPlot(array);
                 }
               }
             };
 
             var reloadPlot = function(data) {
-              if (reloadSri) {
-                plot.reload(layer, data, scope.plotSettings);
-                plot.refresh();
-                plot._Gx.ylab = 27; //this is a hack, but the only way I can get sigplot to take the value
-                reloadSri = false;
-              } else {
-                plot.reload(layer, data);
-                plot._Gx.ylab = 27; //this is a hack, but the only way I can get sigplot to take the value
-              }
+                if (reloadSri) {
+                    plot.reload(layer, data, scope.plotSettings);
+                    plot.refresh();
+                    plot._Gx.ylab = 27; //this is a hack, but the only way I can get sigplot to take the value
+                    reloadSri = false;
+                } else {
+                    plot.reload(layer, data);
+                    plot._Gx.ylab = 27; //this is a hack, but the only way I can get sigplot to take the value
+                }
             };
 
             var modifyWarpboxBehavior = function(plot) {
@@ -408,6 +419,7 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
               autol: 100,
               autox: 3,
               autohide_panbars: true,
+              xcnt: false,
               cmode: "D2", //20Log
               gridBackground: ["rgba(255,255,255,1", "rgba(200,200,200,1"],
               xi: true
@@ -420,7 +432,7 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
 
             layer = plot.overlay_pipe(angular.extend(settings, {type: 2000, 'format': format, pipe: true, pipesize: 1024 * 1024 * 5, yunits: 28}));
             accordion = new sigplot.AccordionPlugin({
-              draw_center_line: true,
+              draw_center_line: false,
               shade_area: true,
               draw_edge_lines: true,
               direction: "vertical",
@@ -483,10 +495,6 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
 
           var showHighlight = function (cf) {
             tunedFreq = cf;//used in wideband plot to determine min/max x values in mouse listeners
-            if (scope.url.indexOf('psd/narrowband') >= 0) {
-              cf = 0;
-              bw = 100e3//TODO get value from TuneFilterDecimate component
-            }
             if (plot && cf !== undefined) {
               if (scope.url.indexOf('psd/wideband') >= 0) {
                 accordion.set_center(cf);
@@ -567,6 +575,8 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
           var reported = 0;
 
           var on_data = function(data) {
+              var snd = new Audio("data:audio/wav," + data);
+              snd.play();
             var bps;
             switch (scope.type) {
               case 'double':
@@ -593,10 +603,10 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
 
             var frameSize = scope.plotSettings.subsize * bpe;
             var numFrames = Math.floor(data.byteLength / frameSize );
-            if (reported <= 5) {
-              console.log(scope.url + ': subsze: ' + scope.plotSettings.subsize + ' numBytes: ' + data.byteLength + ' numFrames: ' + numFrames + ' frameSize: ' + frameSize);
-              reported++;
-            }
+//            if (reported <= 5) {
+//              console.log(scope.url + ': subsze: ' + scope.plotSettings.subsize + ' numBytes: ' + data.byteLength + ' numFrames: ' + numFrames + ' frameSize: ' + frameSize);
+//              reported++;
+//            }
             //workaround: take ony first frame, as loading frames seriatum seems to not work
             //back-end will be modified to send only one frame
             for (var i = 0; i < frameSize /** (numFrames - 1)*/; i+= frameSize) {
@@ -604,9 +614,9 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
               var array = dataConverter(data);
               lastDataSize = array.length;
               if (plot) {
-                if (reported <= 5) {
-                  console.log('plotting data from index ' + i + " to " + (i+frameSize));
-                }
+//                if (reported <= 5) {
+//                  console.log('plotting data from index ' + i + " to " + (i+frameSize));
+//                }
                 reloadPlot(array);
               }
             }
