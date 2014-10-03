@@ -92,7 +92,6 @@
       <div class="btn-group btn-group-xs pull-right">
         <button class="btn btn-default" ng-class="{'btn-primary': detailPlotMode == 'narrowband'}" ng-click="setDetailPlotMode('narrowband')">Narrowband</button>
         <button class="btn btn-default" ng-class="{'btn-primary': detailPlotMode == 'demod_freq'}" ng-click="setDetailPlotMode('demod_freq')">Demod (Frequency)</button>
-        <button class="btn btn-default" ng-class="{'btn-primary': detailPlotMode == 'demod_time'}" ng-click="setDetailPlotMode('demod_time')">Demod (Time)</button>
       </div>
       <p class="rhweb-plot-title">Detail</p>
       <div class="well well-sm text-center">
@@ -112,11 +111,6 @@
                     type="float"
                     url="/rtl/output/psd/fm">
           </rtl-plot>
-
-        </div>
-        <div ng-if="detailPlotMode == 'demod_time'">
-
-          <!-- Replace these comments with demod_time plot -->
 
         </div>
       </div>
