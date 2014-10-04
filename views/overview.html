@@ -10,10 +10,10 @@
   <div ng-if="running" class="row">
     <div class="col-sm-12">
       <div class="btn-group btn-group-xs pull-right">
-        <button class="btn btn-default" ng-class="{'btn-primary': widebandMode == 'line'}" ng-click="setWidebandMode('line')">Line</button>
-        <button class="btn btn-default" ng-class="{'btn-primary': widebandMode == 'raster'}" ng-click="setWidebandMode('raster')">Raster</button>
+        <button class="btn btn-default" ng-class="{'btn-primary': widebandMode == 'line'}" ng-click="setWidebandMode('line')">Wideband (Line)</button>
+        <button class="btn btn-default" ng-class="{'btn-primary': widebandMode == 'raster'}" ng-click="setWidebandMode('raster')">Wideband (Raster)</button>
       </div>
-      <p class="rhweb-plot-title">Wideband</p>
+      <p class="rhweb-plot-title">&NonBreakingSpace;</p>
 
       <div class="well well-sm text-center">
         <div ng-if="widebandMode == 'line'">
@@ -93,7 +93,7 @@
         <button class="btn btn-default" ng-class="{'btn-primary': detailPlotMode == 'narrowband'}" ng-click="setDetailPlotMode('narrowband')">Narrowband</button>
         <button class="btn btn-default" ng-class="{'btn-primary': detailPlotMode == 'demod_freq'}" ng-click="setDetailPlotMode('demod_freq')">Demod (Frequency)</button>
       </div>
-      <p class="rhweb-plot-title">Detail</p>
+      <p class="rhweb-plot-title">&NonBreakingSpace;</p>
       <div class="well well-sm text-center">
         <div ng-if="detailPlotMode == 'narrowband'">
 
