@@ -4,12 +4,31 @@
  *
  **/
 angular.module('rtl-demo-controllers', ['rtl-rest'])
-    .controller('Overview', ['$scope', 'rtl',
-      function($scope, rtl){
+    .controller('Overview', ['$scope', 'rtl', '$routeParams',
+      function($scope, rtl, $routeParams){
         $scope.connected = rtl.connected;
         $scope.survey = rtl.survey;
         $scope.device = rtl.device;
         $scope.processors = rtl.processors;
+
+        $scope.form = {
+          frequency: undefined,
+          processing: undefined
+        };
+
+        $scope.task = function(){
+          $scope.survey.task($scope.form['frequency'], $scope.form['processing']);
+        };
+        $scope.halt = function(){
+          $scope.survey.halt();
+        };
+
+        if($routeParams.frequency && $routeParams.processing) {
+          $scope.form.frequency  = $routeParams.frequency;
+          $scope.form.processing = $routeParams.processing;
+          $scope.task();
+        }
+
         $scope.doTune = function(cf) {
             $scope.form.frequency = cf / 1e6;
             $scope.task();
@@ -34,11 +53,6 @@ angular.module('rtl-demo-controllers', ['rtl-rest'])
           $scope.running = (processing != null);
         });
 
-        $scope.form = {
-          frequency: undefined,
-          processing: undefined
-        };
-
         $scope.$watch('survey.frequency', function(freq) {
           if(freq && !$scope.form.frequency) {
             $scope.form.frequency = freq;
@@ -50,13 +64,6 @@ angular.module('rtl-demo-controllers', ['rtl-rest'])
             $scope.form.processing = processing ? processing : $scope.processors[0];
           }
         });
-
-        $scope.task = function(){
-          $scope.survey.task($scope.form['frequency'], $scope.form['processing']);
-        };
-        $scope.halt = function(){
-          $scope.survey.halt();
-        };
       }
     ])
 ;

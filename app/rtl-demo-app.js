@@ -8,13 +8,17 @@ angular.module('rtl-demo-app', ['ngRoute', 'rtl-demo-controllers', 'rtl-rest', '
     .config(['$routeProvider',
       function($routeProvider) {
         $routeProvider
-            .when('/overview', {
-              templateUrl: 'views/overview.html',
-              controller: 'Overview'
-            })
-            .otherwise({
-              redirectTo: '/overview'
-            });
+          .when('/overview', {
+            templateUrl: 'views/overview.html',
+            controller: 'Overview'
+          })
+          .when('/overview/frequency/:frequency/processing/:processing', {
+            templateUrl: 'views/overview.html',
+            controller: 'Overview'
+          })
+          .otherwise({
+            redirectTo: '/overview'
+          });
       }
     ])
 ;
