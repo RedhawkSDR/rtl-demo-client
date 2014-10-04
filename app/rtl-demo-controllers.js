@@ -20,7 +20,7 @@ angular.module('rtl-demo-controllers', ['rtl-rest'])
           $scope.widebandMode = mode;
         };
 
-        $scope.detailPlotMode = "demod_freq";
+        $scope.detailPlotMode = "narrowband";
         $scope.setDetailPlotMode = function(mode) {
           $scope.detailPlotMode = mode;
         };
