@@ -7,57 +7,6 @@
     </div>
   </div>
 
-  <div ng-if="running" class="row">
-    <div class="col-sm-12">
-      <div class="btn-group btn-group-xs pull-right">
-        <button class="btn btn-default" ng-class="{'btn-primary': widebandMode == 'line'}" ng-click="setWidebandMode('line')">Wideband (Line)</button>
-        <button class="btn btn-default" ng-class="{'btn-primary': widebandMode == 'raster'}" ng-click="setWidebandMode('raster')">Wideband (Raster)</button>
-      </div>
-      <p class="rhweb-plot-title">&NonBreakingSpace;</p>
-
-      <div class="well well-sm text-center">
-        <div ng-if="widebandMode == 'line'">
-          <rtl-plot do-tune="doTune(cf)"
-              width="auto" height="300px"
-              type="float"
-              url="/rtl/output/psd/wideband">
-           </rtl-plot>
-        </div>
-        <div ng-if="widebandMode == 'raster'">
-            <rtl-raster do-tune="doTune(cf)"
-                width="auto" height="300px"
-                type="float"
-                url="/rtl/output/psd/wideband">
-            </rtl-raster>
-        </div>
-      </div>
-    </div>
-
-  </div>
-
-  <div ng-show="running" class="row">
-    <div class="col-sm-3 col-sm-offset-3">
-
-      <p class="text-center rhweb-display-labels">Frequency</p>
-      <div class="well well-sm">
-        <h3 class="text-center text-info rhweb-display-values">
-          <strong ng-if="survey.frequency">{{survey.frequency}} MHz</strong>
-        </h3>
-      </div>
-
-    </div>
-    <div class="col-sm-3">
-
-      <p class="text-center rhweb-display-labels">Processing</p>
-      <div class="well well-sm">
-        <h3 class="text-center text-info rhweb-display-values">
-          <strong>{{survey.processing | uppercase}}</strong>
-        </h3>
-      </div>
-
-    </div>
-  </div>
-
   <div class="row">
     <div class="col-sm-8 col-sm-offset-2">
       <div ng-show="ready" class="rhweb-survey-controls text-center">
@@ -85,6 +34,57 @@
 
       </div>
     </div>
+  </div>
+
+  <div ng-show="running" class="row">
+    <div class="col-sm-3 col-sm-offset-3">
+
+      <p class="text-center rhweb-display-labels">Frequency</p>
+      <div class="well well-sm">
+        <p class="text-center text-info rhweb-display-values">
+          <strong ng-if="survey.frequency">{{survey.frequency}} MHz</strong>
+        </p>
+      </div>
+
+    </div>
+    <div class="col-sm-3">
+
+      <p class="text-center rhweb-display-labels">Processing</p>
+      <div class="well well-sm">
+        <p class="text-center text-info rhweb-display-values">
+          <strong>{{survey.processing | uppercase}}</strong>
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+  <div ng-if="running" class="row">
+    <div class="col-sm-12">
+      <div class="btn-group btn-group-xs pull-right">
+        <button class="btn btn-default" ng-class="{'btn-primary': widebandMode == 'line'}" ng-click="setWidebandMode('line')">Wideband (Line)</button>
+        <button class="btn btn-default" ng-class="{'btn-primary': widebandMode == 'raster'}" ng-click="setWidebandMode('raster')">Wideband (Raster)</button>
+      </div>
+      <p class="rhweb-plot-title">&NonBreakingSpace;</p>
+
+      <div class="well well-sm text-center">
+        <div ng-if="widebandMode == 'line'">
+          <rtl-plot do-tune="doTune(cf)"
+              width="auto" height="300px"
+              type="float"
+              url="/rtl/output/psd/wideband">
+           </rtl-plot>
+        </div>
+        <div ng-if="widebandMode == 'raster'">
+            <rtl-raster do-tune="doTune(cf)"
+                width="auto" height="300px"
+                type="float"
+                url="/rtl/output/psd/wideband">
+            </rtl-raster>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <div ng-if="running" class="row">
