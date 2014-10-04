@@ -207,6 +207,7 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
             var mode = undefined;
 
             var updatePlotSettings = function(data) {
+              console.log('subsize: ' + data.subsize);
               var isDirty = false;
               var cf = data.keywords.CHAN_RF;
               var xstart = data.xstart;
@@ -239,15 +240,14 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
                 }
 
                 if (mode) {
-                  //use this wqhen we know the back-end is sending correct SRI with the initial message
-//                  angular.extend(defaultSettings,
-//                    {
-//                      'xdelta': data.xdelta,
-//                      'xunits': data.xunits,
-//                      'subsize': data.subsize,
-//                      'ydelta': data.ydelta
-//                    }
-//                  );
+                  angular.extend(defaultSettings,
+                    {
+                      'xdelta': data.xdelta,
+                      'xunits': data.xunits,
+                      'subsize': data.subsize,
+                      'ydelta': data.ydelta
+                    }
+                  );
                   switch (scope.type) {
                     case "float":
                       createPlot(mode + "F", defaultSettings);
@@ -301,17 +301,11 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
                   return;
               }
 
-              var frameSize = scope.plotSettings.subsize * bpe;
-              var numFrames = Math.floor(data.byteLength / frameSize );
-              //workaround: take ony first frame, as loading frames seriatum seems to not work
-              //back-end will be modified to send only one frame
-              for (var i = 0; i < frameSize /** (numFrames - 1)*/; i+= frameSize) {
-                data = data.slice(i, i + frameSize);
-                var array = dataConverter(data);
-                lastDataSize = array.length;
-                if (plot) {
-                  reloadPlot(array);
-                }
+              //assume single frame per handler invocation
+              var array = dataConverter(data);
+              lastDataSize = array.length;
+              if (plot) {
+                reloadPlot(array);
               }
             };
 
@@ -408,7 +402,7 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
             ydelta : 0.09752380952380953,
             ystart: 0,
             yunits: 3,
-            subsize: 32768,
+            subsize: 4097,
             size: 4097,
             format: 'SF' };
           scope.plotSettings = angular.copy(defaultSettings);
@@ -542,10 +536,6 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
               }
 
               if (mode) {
-                // We should not cage defaultSettings properties unless we know the server is sending the correct
-                // sri on the initial message. This is OK here so long as the raster plot is not the default plot.
-                // By the time the user selects it, the sri is stable
-                // The value of subsize must be set correctly on plot creation, or firefox will hang.
                 angular.extend(defaultSettings,
                   {
                     'xdelta': data.xdelta,
@@ -607,18 +597,11 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
                 return;
             }
 
-            var frameSize = scope.plotSettings.subsize * bpe;
-            var numFrames = Math.floor(data.byteLength / frameSize );
-            //workaround: take ony first frame, as loading frames seriatum seems to not work
-            //back-end will be modified to send only one frame
-            for (var i = 0; i < frameSize /** (numFrames - 1)*/; i+= frameSize) {
-              data = data.slice(i, i + frameSize);
-              var array = dataConverter(data);
-              lastDataSize = array.length;
-              if (plot) {
+            //assume single frame sent
+            var array = dataConverter(data);
+            if (plot) {
                   reloadPlot(array);
               }
-            }
           };
 
           var reloadPlot = function(data) {
