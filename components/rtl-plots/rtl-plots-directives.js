@@ -79,10 +79,13 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
               ydelta : 0.09752380952380953,
               ystart: 0,
               yunits: 3,
-              subsize: 32768,
+              subsize: 4097,
               size: 32768,
-              format: 'SF' };
+              format: 'SF'
+            };
+
               scope.plotSettings = angular.copy(defaultSettings);
+
 
               var plotOptions = {
                   autohide_panbars: true,
@@ -90,7 +93,7 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
                   //autol: 50,
                   autoy: 3,
                   legend: false,
-                  xcnt: false,
+                  xcnt: 0,
 //                  colors: {bg: "#f5f5f5", fg: "#000"},
                   xi: true,
                   gridBackground: ["rgba(255,255,255,1", "rgba(200,200,200,1"],
@@ -215,6 +218,9 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
               angular.forEach(data, function(item, key){
                 if (angular.isDefined(scope.plotSettings[key]) && !angular.equals(scope.plotSettings[key], item)) {
                   isDirty = true;
+                    if (scope.url.indexOf('psd/fm') >= 0) {
+                        console.log('New SRI: ' + key + ' changed from ' +  scope.plotSettings[key] + ' to ' + item);
+                    }
                   scope.plotSettings[key] = item;
                 }
               });
@@ -233,6 +239,15 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
                 }
 
                 if (mode) {
+                  //use this wqhen we know the back-end is sending correct SRI with the initial message
+//                  angular.extend(defaultSettings,
+//                    {
+//                      'xdelta': data.xdelta,
+//                      'xunits': data.xunits,
+//                      'subsize': data.subsize,
+//                      'ydelta': data.ydelta
+//                    }
+//                  );
                   switch (scope.type) {
                     case "float":
                       createPlot(mode + "F", defaultSettings);
@@ -314,8 +329,8 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
 
             var modifyWarpboxBehavior = function(plot) {
               plot._Mx.onmouseup = (function(Mx) {
-                alert('yay warpbox');
                 return function(event) {
+                    alert('yay warpbox');
                   if (Mx.warpbox) {
                     mx.onWidgetLayer(Mx, function() {
                       mx.erase_window(Mx);
@@ -345,7 +360,7 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
                   }
                   mx.widget_callback(Mx, event);
                 };
-              })(Mx);
+              })(plot._Mx);
             };
 
             if(on_data)
@@ -376,7 +391,7 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
           type: '@',
           doTune: '&'
         },
-        template: '<div style="width: {{width}}; height: {{height}};" id="plot" ></div>',
+        template: '<div style="width: {{width}}; height: {{height}};" id="raster" ></div>',
         link: function (scope, element, attrs) {
           var socket = SubscriptionSocket.createNew();
 
@@ -394,7 +409,7 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
             ystart: 0,
             yunits: 3,
             subsize: 32768,
-            size: 32768,
+            size: 4097,
             format: 'SF' };
           scope.plotSettings = angular.copy(defaultSettings);
 
@@ -405,7 +420,7 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
               autol: 100,
               autox: 3,
               autohide_panbars: true,
-              xcnt: false,
+              xcnt: 0,
               cmode: "D2", //20Log
               gridBackground: ["rgba(255,255,255,1", "rgba(200,200,200,1"],
               xi: true
@@ -527,6 +542,18 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
               }
 
               if (mode) {
+                // We should not cage defaultSettings properties unless we know the server is sending the correct
+                // sri on the initial message. This is OK here so long as the raster plot is not the default plot.
+                // By the time the user selects it, the sri is stable
+                // The value of subsize must be set correctly on plot creation, or firefox will hang.
+                angular.extend(defaultSettings,
+                  {
+                    'xdelta': data.xdelta,
+                    'xunits': data.xunits,
+                    'ydelta': data.ydelta,
+                    'subsize': data.subsize
+                  }
+                );
                 switch (scope.type) {
                   case "float":
                     createPlot(mode + "F", defaultSettings);
@@ -556,8 +583,6 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
           var lastDataSize;
 
           var on_data = function(data) {
-              var snd = new Audio("data:audio/wav," + data);
-              snd.play();
             var bps;
             switch (scope.type) {
               case 'double':
@@ -591,7 +616,7 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
               var array = dataConverter(data);
               lastDataSize = array.length;
               if (plot) {
-                reloadPlot(array);
+                  reloadPlot(array);
               }
             }
           };
@@ -610,7 +635,6 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
 
           var modifyWarpboxBehavior = function(plot) {
             plot._Mx.onmouseup = (function(Mx) {
-              alert('yay warpbox');
               return function(event) {
                 if (Mx.warpbox) {
                   mx.onWidgetLayer(Mx, function() {
@@ -641,7 +665,7 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
                 }
                 mx.widget_callback(Mx, event);
               };
-            })(Mx);
+            })(plot._Mx);
           };
 
           if(on_data)
