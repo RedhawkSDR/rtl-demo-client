@@ -68,6 +68,7 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
         return function(data) { return new fn(data); };
       };
     })
+    //Line plot
     .directive('rtlPlot', ['SubscriptionSocket', 'plotDataConverter',
       function(SubscriptionSocket, plotDataConverter){
         return {
@@ -83,14 +84,20 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
           link: function (scope, element, attrs) {
             var socket = SubscriptionSocket.createNew();
 
-            var plot, layer, accordion;
+            //sigplot objects
+            var plot, //line plot
+                layer, //layer number
+                accordion; //sigplot plug-in, used here to display vertical line at tuned frequency
 
+            //narrowband bandwidth
             var bw = 100000;
 
+            //wideband bandwidth
             var spectrumBw = 2e6;
 
-            var tunedFreq;
+            var tunedFreq; //TODO see if this is still needed
 
+            //settings used when plot is created. Will be overridden from received SRI
             var defaultSettings = {
               xdelta:10.25390625,
               xstart: -1,//ensure change is detected with first SRI
@@ -103,36 +110,36 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
               format: 'SF'
             };
 
-              scope.plotSettings = angular.copy(defaultSettings);
+            //apply new values from SRI to this object
+            scope.plotSettings = angular.copy(defaultSettings);
 
+            var plotOptions = {
+              autohide_panbars: true,
+              autox: 3, //auto-scale min and max x values
+              autoy: 3, //auto-scale min and max y values
+              legend: false, //don't show legend of traces being plotted
+              xi: true, //invert foreground/background colors
+              gridBackground: ["rgba(255,255,255,1", "rgba(200,200,200,1"],
+              all: true, //show all plot data, rather than partial range with pan bars
+              cmode: "D2", //Output mode 20Log
+              fillStyle: ["rgba(224, 255, 194, 0.0)", "rgba(0, 153, 51, 0.7)", "rgba(0, 0, 0, 1.0)"]
+            };
 
-              var plotOptions = {
-                  autohide_panbars: true,
-                  autox: 3,
-                  //autol: 50,
-                  autoy: 3,
-                  legend: false,
-                  xcnt: 0,
-//                  colors: {bg: "#f5f5f5", fg: "#000"},
-                  xi: true,
-                  gridBackground: ["rgba(255,255,255,1", "rgba(200,200,200,1"],
-                  all: true,
-                  cmode: "D2", //20Log
-                  fillStyle: ["rgba(224, 255, 194, 0.0)", "rgba(0, 153, 51, 0.7)", "rgba(0, 0, 0, 1.0)"]
-              };
-
-              if (scope.url.indexOf('psd/fm') >= 0 || scope.url.indexOf('psd/narrowband') >= 0) {
-                  plotOptions.noreadout = true;
-              }
+            //Show readout (values under plot, updated as cursor moves) only for wideband plot
+            if (scope.url.indexOf('psd/fm') >= 0 || scope.url.indexOf('psd/narrowband') >= 0) {
+              plotOptions.noreadout = true;
+            }
 
             var createPlot = function(format, settings) {
               plot = new sigplot.Plot(element[0].firstChild, plotOptions);
               if (scope.url.indexOf('psd/wideband') >= 0) {
+                //mouse listeners used to provide click-tuning and drag-tuning
                 plot.addListener('mdown', plotMDownListener);
                 plot.addListener('mup', plotMupListener);
               }
 
               layer = plot.overlay_array(null, angular.extend(defaultSettings, {'format': format}));
+              //sigplot plug-in used to draw vertical line at tuned freq
               accordion = new sigplot.AccordionPlugin({
                 draw_center_line: true,
                 shade_area: false,
@@ -141,92 +148,119 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
                 edge_line_style: {strokeStyle: "#FF0000"}
               });
 
-              plot.add_plugin(accordion, layer + 1);
-              //modifyWarpboxBehavior(plot);
+              plot.add_plugin(accordion, layer + 1);//plug-ins are drawn in separate layers
+              /*
+               * Change behavior of warpbox (dotted rectangle drawn as you drag from a start point)
+               * to be shown with right-click (drag-tuning) as well as left-click (zooming)
+               * */
+              //modifyWarpboxBehavior(plot);//not working yet
             };
 
-              var lastMouseDown = {
-                  x: undefined,
-                  y: undefined
-              };
+            var lastMouseDown = {
+              x: undefined,
+              y: undefined
+            };
 
-              var plotMDownListener = function(event) {
-                  lastMouseDown.x = event.x;
-                  lastMouseDown.y = event.y;
-              };
+            //mark initial drag point
+            var plotMDownListener = function(event) {
+              lastMouseDown.x = event.x;
+              lastMouseDown.y = event.y;
+            };
 
-              var clickTolerance = 200;
-              var plotMupListener = function(event) {
-                if (Math.abs(event.x - lastMouseDown.x) <= clickTolerance && event.which === 1) {
-                  if (inPlotBounds(event.x, event.y)) {
-                    console.log("Tuned to " + event.x / 1000 + " KHz");
-                    scope.doTune({cf: event.x});
-                  }
-                } else if (Math.abs(event.x - lastMouseDown.x) >= clickTolerance && event.which == 3) {
-                  //disable drag tuning until warpbox can be drawn
-                  //dragTune(event);
+            //Since freq is on MHz scale, we need some tolerance when comparing click-point to some value
+            var clickTolerance = 200; //TODO set value automatically as a multiple of xdelta, to work with any data scale
+
+            //Compare with initial drag-point to get user-specified rectangle
+            var plotMupListener = function(event) {
+              //event.which==> 3=left-click, 2=middle-click, 1=right-click
+              //left-click zooming is built into sigplot. Here we implement right-click drag-tuning
+              if (Math.abs(event.x - lastMouseDown.x) <= clickTolerance && event.which === 1) {
+                if (inPlotBounds(event.x, event.y)) {
+                  console.log("Tuned to " + event.x / 1000 + " KHz");
+                  scope.doTune({cf: event.x});
                 }
-              };
+              } else if (Math.abs(event.x - lastMouseDown.x) >= clickTolerance && event.which == 3) {
+                //disable drag tuning until warpbox can be drawn with right-click dragging
+                //dragTune(event);
+              }
+            };
 
-              var dragTune = function(event) {
-                  if (lastMouseDown.x && lastMouseDown.y) {
-                      var rect = {
-                          x1: lastMouseDown.x,
-                          x2: event.x,
-                          y1: lastMouseDown.y,
-                          y2: event.y
-                      };
-                      lastMouseDown = {x:undefined, y: undefined};
-                      scope.doTune({cf:(rect.x1 + rect.x2) / 2});
-                      console.log("Tuned to sub-band from " + rect.x1 / 1000  + " KHz to " + rect.x2 / 1000 + " KHz");
-                  }
-              };
+            /* Tune to freq value at center of rectangle. In applications where bandwidth is selectable
+             * it can be set from width of rectangle. Here bandwidth is not selectable because we're dealing with
+             * fixed-bandwidth FM broadcast signals.
+             */
+            var dragTune = function(event) {
+              if (lastMouseDown.x && lastMouseDown.y) {
+                var rect = {
+                  x1: lastMouseDown.x,
+                  x2: event.x,
+                  y1: lastMouseDown.y,
+                  y2: event.y
+                };
+                lastMouseDown = {x:undefined, y: undefined}; //reset initial drag-point
+                scope.doTune({cf:(rect.x1 + rect.x2) / 2});
+                console.log("Tuned to sub-band from " + rect.x1 / 1000  + " KHz to " + rect.x2 / 1000 + " KHz");
+              }
+            };
 
+            /* Plot min/max values go beyond the plot boundary, to include the area where labels, etc are displayed.
+             * Here we detect whether clicking on actual plot or surrounding area.
+             */
             var inPlotBounds = function(x, y) {
+              //zoom stack remembers min/max values at each zoom level, with current zoom values at end of stack
               var zoomStack = plot._Mx.stk[plot._Mx.stk.length - 1];
               var xmin = zoomStack.xmin;
               var xmax = zoomStack.xmax;
               var ymin = zoomStack.ymin;
               var ymax = zoomStack.ymax;
-              //if clicking on x position > xmax, x will be set to xmax. Same for y values
+              // when clicking on any x position > xmax, x will be set to xmax. Same for y values
               if (x >= xmax || x <= xmin || y >= ymax || y <= ymin) {
                 return false;
               }
               return true;
             }
 
-              var showHighlight = function (cf) {
-                tunedFreq = cf;//used in wideband plot to determine min/max x values in mouse listeners
-                if (scope.url.indexOf('psd/narrowband') >= 0) {
-                  cf = 0;
-                  bw = 100e3//TODO get value from TuneFilterDecimate component
-                }
-                if (plot && cf !== undefined) {
-                  if (scope.url.indexOf('psd/wideband') >= 0 || scope.url.indexOf('psd/narrowband') >= 0) {
-                    plot.get_layer(layer).remove_highlight('subBand');
-                    plot.get_layer(layer).add_highlight(
+            /*
+             * Show subband tuning by adding a feature to the plot which draws a different color trace
+             * for data in a specified x-value range
+             */
+            var showHighlight = function (cf) {
+              tunedFreq = cf; //TODO see if this is still needed
+              if (scope.url.indexOf('psd/narrowband') >= 0) {
+                cf = 0;//show baseband freq for narrowband plot, not RF
+                bw = 100e3//TODO get value from TuneFilterDecimate component
+              }
+              if (plot && cf !== undefined) {
+                if (scope.url.indexOf('psd/wideband') >= 0 || scope.url.indexOf('psd/narrowband') >= 0) {
+                  plot.get_layer(layer).remove_highlight('subBand');
+                  plot.get_layer(layer).add_highlight(
                       {
                         xstart: cf - bw / 2,
                         xend: cf + bw / 2,
                         color: 'rgba(255,50,50,1)',
                         id: 'subBand'
                       }
-                    );
-                    accordion.set_center(cf);
-                    accordion.set_width(bw);
-                  }
+                  );
+                  accordion.set_center(cf);
+                  accordion.set_width(bw);//width currently irrelevant since we're not drawing edge-lines
                 }
+              }
 
-              };
+            };
 
+            /* When SRI has changed, plot settings will be updated with next push of data */
             var reloadSri;
+
+            /* Detect changes to xstart and draw new highlight */
             var lastXStart = -1;
 
-
+            /* String value used as part of format string: S = scalar data, C = complex data  */
             var mode = undefined;
 
+            /*
+             * Detect changed values from SRI and apply to plot
+             */
             var updatePlotSettings = function(data) {
-              console.log('subsize: ' + data.subsize);
               var isDirty = false;
               var cf = data.keywords.CHAN_RF;
               var xstart = data.xstart;
@@ -235,18 +269,21 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
                 showHighlight(cf);
                 isDirty = true;
               }
+
               angular.forEach(data, function(item, key){
                 if (angular.isDefined(scope.plotSettings[key]) && !angular.equals(scope.plotSettings[key], item)) {
                   isDirty = true;
-                    if (scope.url.indexOf('psd/fm') >= 0) {
-                        console.log('New SRI: ' + key + ' changed from ' +  scope.plotSettings[key] + ' to ' + item);
-                    }
+                  console.log('New SRI: ' + key + ' changed from ' +  scope.plotSettings[key] + ' to ' + item);
                   scope.plotSettings[key] = item;
                 }
               });
 
+              //TODO see if this is still needed
               scope.plotSettings['size'] = lastDataSize * scope.plotSettings['xdelta'];
 
+              /*
+               * We create the plot the first time SRI is received
+               */
               if (!plot) {
                 switch (data.mode) {
                   case 0:
@@ -260,15 +297,19 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
 
                 if (mode) {
                   angular.extend(defaultSettings,
-                    {
-                      'xdelta': data.xdelta,
-                      'xunits': data.xunits,
-                      'subsize': data.subsize,
-                      'ydelta': data.ydelta
-                    }
+                      {
+                        'xdelta': data.xdelta,
+                        'xunits': data.xunits,
+                        'subsize': data.subsize,
+                        'ydelta': data.ydelta
+                      }
                   );
+
+                  // format string = (C|S)(F|D) for scalar/complex data containing Float or Double values
                   switch (scope.type) {
                     case "float":
+                      /* unexplained behavior in firefox: If we invoke with scope.plotSettings instead of
+                         defaultSettings, plot layer is not created and errors are thrown on every push of data */
                       createPlot(mode + "F", defaultSettings);
                       console.log("Create plots with format " + mode + "F");
                       break;
@@ -288,6 +329,7 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
               }
             };
 
+            //SRI = Signal Related Information: signal metadata, pushed from server initially and when values change
             var on_sri = function(sri) {
               updatePlotSettings(sri);
             };
@@ -295,30 +337,47 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
             var dataConverter = plotDataConverter(scope.type);
             var lastDataSize;
 
+            /* Server pushes data one frame at a time */
             var on_data = function(data) {
-              var bps;
+
+              /*bpa and ape not currently used. Useful if we need to identify frame boundaries in data.
+
+                Number of raw bytes = subsize (from SRI) * bytes per element (BPE).
+                BPE = number of bytes per atom (BPA) * atoms per element (APE)
+                BPA = bytes needed to represent a value, i.e 2 for float, 4 for double
+                APE = 1 for scalar data, 2 for complex
+
+                Complex data can be plotted in various complex output modes, i.e. magnitude
+                of complex number (sqrt(real** + imag**)), sum of real and imaginary components,
+                separate trace for real and imaginary values, etc.
+               */
+
+              var bpa;
               switch (scope.type) {
                 case 'double':
-                  bps = 2;
+                  bpa = 2;
                   break;
                 case 'float':
-                  bps = 4;
+                  bpa = 4;
                   break;
                 default:
                   return;
               };
 
-              var bpe;
+              var ape;
               switch (mode) {
                 case 'S':
-                  bpe = bps;
+                  ape = 1;
                   break;
                 case 'C':
-                  bpe = bps * 2;
+                  ape = 2;
                   break;
                 default:
                   return;
               }
+
+              //bytes per element. There will be bpe * subsize raw bytes per frame.
+              var bpe = bpa * ape;
 
               //assume single frame per handler invocation
               var array = dataConverter(data);
@@ -332,49 +391,50 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
                 if (reloadSri) {
                     plot.reload(layer, data, scope.plotSettings);
                     plot.refresh();
-                    plot._Gx.ylab = 27; //this is a hack, but the only way I can get sigplot to take the value
+                    plot._Gx.ylab = 27; //this is a hack, but sigplot seems to ignore the value in plotSettings
                     reloadSri = false;
                 } else {
                     plot.reload(layer, data);
-                    plot._Gx.ylab = 27; //this is a hack, but the only way I can get sigplot to take the value
+                    plot._Gx.ylab = 27; //this is a hack, but sigplot seems to ignore the value in plotSettings
                 }
             };
 
-            var modifyWarpboxBehavior = function(plot) {
-              plot._Mx.onmouseup = (function(Mx) {
-                return function(event) {
-                    alert('yay warpbox');
-                  if (Mx.warpbox) {
-                    mx.onWidgetLayer(Mx, function() {
-                      mx.erase_window(Mx);
-                    });
-
-                    var old_warpbox = Mx.warpbox;
-                    Mx.warpbox = undefined;
-
-                    if (event.which === 1 || event.which === 3) {
-                      if (old_warpbox.func) {
-                        var xo = old_warpbox.xo;
-                        var yo = old_warpbox.yo;
-                        var xl = old_warpbox.xl;
-                        var yl = old_warpbox.yl;
-
-                        if (old_warpbox.mode === "vertical") {
-                          xo = Mx.l;
-                          xl = Mx.r;
-                        } else if (old_warpbox.mode === "horizontal") {
-                          yo = Mx.t;
-                          yl = Mx.b;
-                        } // else "box"
-                        old_warpbox.func(event, xo, yo, xl, yl, old_warpbox.style.return_value);
-                      }
-                    }
-
-                  }
-                  mx.widget_callback(Mx, event);
-                };
-              })(plot._Mx);
-            };
+            //Not working yet
+//            var modifyWarpboxBehavior = function(plot) {
+//              plot._Mx.onmouseup = (function(Mx) {
+//                return function(event) {
+//                    alert('yay warpbox');
+//                  if (Mx.warpbox) {
+//                    mx.onWidgetLayer(Mx, function() {
+//                      mx.erase_window(Mx);
+//                    });
+//
+//                    var old_warpbox = Mx.warpbox;
+//                    Mx.warpbox = undefined;
+//
+//                    if (event.which === 1 || event.which === 3) {
+//                      if (old_warpbox.func) {
+//                        var xo = old_warpbox.xo;
+//                        var yo = old_warpbox.yo;
+//                        var xl = old_warpbox.xl;
+//                        var yl = old_warpbox.yl;
+//
+//                        if (old_warpbox.mode === "vertical") {
+//                          xo = Mx.l;
+//                          xl = Mx.r;
+//                        } else if (old_warpbox.mode === "horizontal") {
+//                          yo = Mx.t;
+//                          yl = Mx.b;
+//                        } // else "box"
+//                        old_warpbox.func(event, xo, yo, xl, yl, old_warpbox.style.return_value);
+//                      }
+//                    }
+//
+//                  }
+//                  mx.widget_callback(Mx, event);
+//                };
+//              })(plot._Mx);
+//            };
 
             if(on_data)
               socket.addBinaryListener(on_data);
@@ -393,6 +453,8 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
         };
       }
     ])
+    //TODO factor out common code from line and raster plot directives
+  //Raster plot
   .directive('rtlRaster', ['SubscriptionSocket', 'plotDataConverter',
     function(SubscriptionSocket, plotDataConverter){
       return {
