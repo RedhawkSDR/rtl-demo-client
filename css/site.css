@@ -45,6 +45,10 @@
     font-weight: bold;
     /*font-size: small;*/
 }
+.rhweb-plot-container {
+    background-color: #222 !important;
+    border-color: #888;
+}
 
 .well {
     background-color: white;

@@ -86,7 +86,7 @@ with this program.  If not, see http://www.gnu.org/licenses/.
       </div>
       <p class="rhweb-plot-title">&NonBreakingSpace;</p>
 
-      <div class="well well-sm text-center">
+      <div class="well well-sm text-center rhweb-plot-container">
         <div ng-if="widebandMode == 'line'">
           <rtl-plot do-tune="doTune(cf)"
               width="auto" height="300px"
@@ -113,7 +113,7 @@ with this program.  If not, see http://www.gnu.org/licenses/.
         <button class="btn btn-default" ng-class="{'btn-primary': detailPlotMode == 'demod_freq'}" ng-click="setDetailPlotMode('demod_freq')">Demod (Frequency)</button>
       </div>
       <p class="rhweb-plot-title">&NonBreakingSpace;</p>
-      <div class="well well-sm text-center">
+      <div class="well well-sm text-center rhweb-plot-container">
         <div ng-if="detailPlotMode == 'narrowband'">
 
           <rtl-plot do-tune="doTune(cf)"

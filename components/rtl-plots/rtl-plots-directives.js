@@ -118,11 +118,9 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
               autox: 3, //auto-scale min and max x values
               autoy: 3, //auto-scale min and max y values
               legend: false, //don't show legend of traces being plotted
-              xi: true, //invert foreground/background colors
-              gridBackground: ["rgba(255,255,255,1", "rgba(200,200,200,1"],
               all: true, //show all plot data, rather than partial range with pan bars
               cmode: "D2", //Output mode 20Log
-              fillStyle: ["rgba(224, 255, 194, 0.0)", "rgba(0, 153, 51, 0.7)", "rgba(0, 0, 0, 1.0)"]
+              colors: {bg: "#222", fg: "#888"}
             };
 
             //Show readout (values under plot, updated as cursor moves) only for wideband plot
@@ -137,6 +135,15 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
                 plot.addListener('mdown', plotMDownListener);
                 plot.addListener('mup', plotMupListener);
               }
+
+              plot.change_settings({
+                fillStyle: [
+                  "rgba(255, 255, 100, 0.7)",
+                  "rgba(255, 0, 0, 0.7)",
+                  "rgba(0, 255, 0, 0.7)",
+                  "rgba(0, 0, 255, 0.7)"
+                ]
+              });
 
               layer = plot.overlay_array(null, angular.extend(defaultSettings, {'format': format}));
               //sigplot plug-in used to draw vertical line at tuned freq
@@ -218,7 +225,7 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
                 return false;
               }
               return true;
-            }
+            };
 
             /*
              * Show subband tuning by adding a feature to the plot which draws a different color trace
@@ -362,7 +369,7 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
                   break;
                 default:
                   return;
-              };
+              }
 
               var ape;
               switch (mode) {
@@ -497,14 +504,22 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
               autohide_panbars: true,
               xcnt: 0,
               cmode: "D2", //20Log
-              gridBackground: ["rgba(255,255,255,1", "rgba(200,200,200,1"],
-              xi: true
-//              colors: {bg: "rgba(255,255,255,1)", fg: "rgba(0,0,0,1)"}
+              colors: {bg: "#222", fg: "#888"},
+              nogrid: true
             });
             if (scope.url.indexOf('psd/wideband') >= 0) {
               plot.addListener('mdown', plotMDownListener);
               plot.addListener('mup', plotMupListener);
             }
+
+            plot.change_settings({
+              fillStyle: [
+                "rgba(255, 255, 100, 0.7)",
+                "rgba(255, 0, 0, 0.7)",
+                "rgba(0, 255, 0, 0.7)",
+                "rgba(0, 0, 255, 0.7)"
+              ]
+            });
 
             layer = plot.overlay_pipe(angular.extend(settings, {type: 2000, 'format': format, pipe: true, pipesize: 1024 * 1024 * 5, yunits: 28}));
             accordion = new sigplot.AccordionPlugin({
@@ -567,7 +582,7 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
               return false;
             }
             return true;
-          }
+          };
 
           var showHighlight = function (cf) {
             tunedFreq = cf;//used in wideband plot to determine min/max x values in mouse listeners
@@ -657,14 +672,14 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
             var bps;
             switch (scope.type) {
               case 'double':
-                bps = 2;
+                bps = 8;
                 break;
               case 'float':
                 bps = 4;
                 break;
               default:
                 return;
-            };
+            }
 
             var bpe;
             switch (mode) {
