@@ -78,11 +78,38 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
             height: '@',
             url: '@',
             type: '@',
-            doTune: '&'
+            doTune: '&',
+            useGradient: '=?',
+            cmode: '@?'
           },
           template: '<div style="width: {{width}}; height: {{height}};" id="plot" ></div>',
           link: function (scope, element, attrs) {
             var socket = SubscriptionSocket.createNew();
+
+            if(!angular.isDefined(scope.useGradient))
+              scope.useGradient = true;
+
+            /**
+             * plot rendering mode
+             *   "IN" = Index, "AB" = Abscissa,
+             *   "MA" = Magnitude, "PH" = Phase,
+             *   "RE" = Real,
+             *   "IM" = Imaginary,
+             *   "LO" or "D1" = 10log,
+             *   "L2" or "D2" = 20log,
+             *   "RI" or "IR" = Real vs. Imaginary
+             * @type {string[]}
+             */
+            var validCMode = ['IN', 'AB', 'MA', 'PH', 'RE', 'LO', 'D1', 'L2', 'D2'];
+            var cmode = 'D2';
+            console.log(scope.cmode);
+            if(angular.isDefined(scope.cmode) && scope.cmode != "") {
+              if(validCMode.indexOf(scope.cmode) == -1) {
+                console.log("WARN::Invalid cmode '"+scope.cmode+"' setting to '"+cmode+"'.");
+              } else {
+                cmode = scope.cmode;
+              }
+            }
 
             //sigplot objects
             var plot, //line plot
@@ -119,7 +146,7 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
               autoy: 3, //auto-scale min and max y values
               legend: false, //don't show legend of traces being plotted
               all: true, //show all plot data, rather than partial range with pan bars
-              cmode: "D2", //Output mode 20Log
+              cmode: cmode, //Output mode 20Log
               colors: {bg: "#222", fg: "#888"}
             };
 
@@ -136,14 +163,16 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
                 plot.addListener('mup', plotMupListener);
               }
 
-              plot.change_settings({
-                fillStyle: [
-                  "rgba(255, 255, 100, 0.7)",
-                  "rgba(255, 0, 0, 0.7)",
-                  "rgba(0, 255, 0, 0.7)",
-                  "rgba(0, 0, 255, 0.7)"
-                ]
-              });
+              if(scope.useGradient) {
+                plot.change_settings({
+                  fillStyle: [
+                    "rgba(255, 255, 100, 0.7)",
+                    "rgba(255, 0, 0, 0.7)",
+                    "rgba(0, 255, 0, 0.7)",
+                    "rgba(0, 0, 255, 0.7)"
+                  ]
+                });
+              }
 
               layer = plot.overlay_array(null, angular.extend(defaultSettings, {'format': format}));
               //sigplot plug-in used to draw vertical line at tuned freq
