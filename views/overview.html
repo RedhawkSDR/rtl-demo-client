@@ -79,6 +79,14 @@ with this program.  If not, see http://www.gnu.org/licenses/.
   </div>
 
   <div ng-if="running" class="row">
+    <div class="col-sm-6 col-sm-offset-3">
+      <div class="text-center">
+        <streaming-audio url="audioUrl"></streaming-audio>
+      </div>
+    </div>
+  </div>
+
+  <div ng-if="running" class="row">
     <div class="col-sm-12">
       <div class="btn-group btn-group-xs pull-right">
         <button class="btn btn-default" ng-class="{'btn-primary': widebandMode == 'line'}" ng-click="setWidebandMode('line')">Wideband (Line)</button>

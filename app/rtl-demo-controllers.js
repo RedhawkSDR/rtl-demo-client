@@ -30,6 +30,8 @@ angular.module('rtl-demo-controllers', ['rtl-rest'])
         $scope.device = rtl.device;
         $scope.processors = rtl.processors;
 
+        $scope.audioUrl = '/rtl/output/stream';
+
         $scope.form = {
           frequency: undefined,
           processing: undefined
