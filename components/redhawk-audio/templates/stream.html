@@ -3,15 +3,17 @@
     display: inline-block;
     vertical-align: middle;
     float: none;
-    padding: 2px;
   }
   .audio-stream-timestamp {
     text-align: center;
+    font-size: smaller;
   }
   .audio-stream > .well {
     background-color: #bebebe;
     border-color: #aaaaaa;
     color: #202020;
+    margin: 0;
+    padding: 7px;
   }
 </style>
 <audio class="player" autoplay="true">
@@ -21,13 +23,13 @@
   <div class="well well-sm">
     <div class="container-fluid audio-stream">
       <div class="row">
-        <div class="col-md-1 vert-child">
-          <button class="btn glyphicon glyphicon-play"
+        <div class="col-md-2 vert-child">
+          <button class="btn btn-xs glyphicon glyphicon-play"
                   ng-class="{'glyphicon-play': player.paused, 'glyphicon-stop': !player.paused}"
                   ng-click="togglePlay()">
           </button>
         </div>
-        <div class="col-md-5 vert-child">
+        <div class="col-md-4 vert-child">
 
           <div class="audio-stream-timestamp" ng-if="!player.paused">
             {{currentTime}}
@@ -39,7 +41,7 @@
         </div>
         <div class="col-md-2 vert-child">
           <button ng-click="mute()"
-             class="btn glyphicon"
+             class="btn btn-xs glyphicon"
              ng-class="{'glyphicon glyphicon-volume-up': !muted, 'glyphicon glyphicon-volume-off': muted}">
           </button>
         </div>
