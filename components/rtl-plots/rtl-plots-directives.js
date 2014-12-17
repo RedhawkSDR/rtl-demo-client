@@ -84,7 +84,12 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
           },
           template: '<div style="width: {{width}}; height: {{height}};" id="plot" ></div>',
           link: function (scope, element, attrs) {
+
             var socket = SubscriptionSocket.createNew();
+
+            var RUBBERBOX_ACTION = 'select';
+
+            var RUBBERBOX_MODE = 'horizontal';
 
             if(!angular.isDefined(scope.useGradient))
               scope.useGradient = true;
@@ -147,6 +152,8 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
               legend: false, //don't show legend of traces being plotted
               all: true, //show all plot data, rather than partial range with pan bars
               cmode: cmode, //Output mode 20Log
+              rubberbox_action: RUBBERBOX_ACTION,
+              rubberbox_mode: RUBBERBOX_MODE,
               colors: {bg: "#222", fg: "#888"}
             };
 
@@ -185,11 +192,6 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
               });
 
               plot.add_plugin(accordion, layer + 1);//plug-ins are drawn in separate layers
-              /*
-               * Change behavior of warpbox (dotted rectangle drawn as you drag from a start point)
-               * to be shown with right-click (drag-tuning) as well as left-click (zooming)
-               * */
-              //modifyWarpboxBehavior(plot);//not working yet
             };
 
             var lastMouseDown = {
@@ -208,16 +210,36 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
 
             //Compare with initial drag-point to get user-specified rectangle
             var plotMupListener = function(event) {
-              //event.which==> 3=left-click, 2=middle-click, 1=right-click
+              console.log("ctrl: " + event.ctrlKey);
+              //event.which==> 1=left-click, 2=middle-click, 3=right-click
               //left-click zooming is built into sigplot. Here we implement right-click drag-tuning
               if (Math.abs(event.x - lastMouseDown.x) <= clickTolerance && event.which === 1) {
-                if (inPlotBounds(event.x, event.y)) {
+                if (inPlotBounds(event.x, event.y) && !scope.ctrlKeyPressed) {
                   console.log("Tuned to " + event.x / 1000 + " KHz");
                   scope.doTune({cf: event.x});
                 }
-              } else if (Math.abs(event.x - lastMouseDown.x) >= clickTolerance && event.which == 3) {
-                //disable drag tuning until warpbox can be drawn with right-click dragging
-                //dragTune(event);
+              } else if (Math.abs(event.x - lastMouseDown.x) >= clickTolerance && dragSelect(event.which)) {
+                dragTune(event);
+              }
+            };
+
+            /**
+             * Determine whether a select or  zoom action is being performed with the current drag operation,
+             * in accordance with the current rubberbox_action plot option setting.
+             *
+             * @param {Number} button the mouse button that is being pressed. 1: left; 2: middle; 3: right
+             * @returns {boolean} true if a select action is being performed, false if a zoom action is being performed.
+             */
+            var dragSelect = function(button) {
+              switch (RUBBERBOX_ACTION) {
+                case 'select' :
+                  //true for left-click drag
+                  return button === 1 && plot._Mx.warpbox.style !== plot._Mx.warpbox.alt_style;
+                case 'zoom' :
+                  //true for ctrl-left-click drag
+                  return button === 1 && plot._Mx.warpbox.style === plot._Mx.warpbox.alt_style;
+                default:
+                  return false;
               }
             };
 
@@ -261,7 +283,6 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
              * for data in a specified x-value range
              */
             var showHighlight = function (cf) {
-              tunedFreq = cf; //TODO see if this is still needed
               if (scope.url.indexOf('psd/narrowband') >= 0) {
                 cf = 0;//show baseband freq for narrowband plot, not RF
                 bw = 100e3//TODO get value from TuneFilterDecimate component
@@ -435,43 +456,6 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
                 }
             };
 
-            //Not working yet
-//            var modifyWarpboxBehavior = function(plot) {
-//              plot._Mx.onmouseup = (function(Mx) {
-//                return function(event) {
-//                    alert('yay warpbox');
-//                  if (Mx.warpbox) {
-//                    mx.onWidgetLayer(Mx, function() {
-//                      mx.erase_window(Mx);
-//                    });
-//
-//                    var old_warpbox = Mx.warpbox;
-//                    Mx.warpbox = undefined;
-//
-//                    if (event.which === 1 || event.which === 3) {
-//                      if (old_warpbox.func) {
-//                        var xo = old_warpbox.xo;
-//                        var yo = old_warpbox.yo;
-//                        var xl = old_warpbox.xl;
-//                        var yl = old_warpbox.yl;
-//
-//                        if (old_warpbox.mode === "vertical") {
-//                          xo = Mx.l;
-//                          xl = Mx.r;
-//                        } else if (old_warpbox.mode === "horizontal") {
-//                          yo = Mx.t;
-//                          yl = Mx.b;
-//                        } // else "box"
-//                        old_warpbox.func(event, xo, yo, xl, yl, old_warpbox.style.return_value);
-//                      }
-//                    }
-//
-//                  }
-//                  mx.widget_callback(Mx, event);
-//                };
-//              })(plot._Mx);
-//            };
-
             if(on_data)
               socket.addBinaryListener(on_data);
             if(on_sri)
@@ -510,7 +494,9 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
 
           var bw = 100000;
 
-          var tunedFreq;
+          var RUBBERBOX_ACTION = 'select';
+
+          var RUBBERBOX_MODE = 'horizontal';
 
           var defaultSettings = {
             xdelta:10.25390625,
@@ -534,7 +520,9 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
               xcnt: 0,
               cmode: "D2", //20Log
               colors: {bg: "#222", fg: "#888"},
-              nogrid: true
+              nogrid: true,
+              rubberbox_action: RUBBERBOX_ACTION,
+              rubberbox_mode: RUBBERBOX_MODE,
             });
             if (scope.url.indexOf('psd/wideband') >= 0) {
               plot.addListener('mdown', plotMDownListener);
@@ -560,7 +548,6 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
             });
 
             plot.add_plugin(accordion, layer + 1);
-            //modifyWarpboxBehavior(plot);
           };
 
           var lastMouseDown = {
@@ -580,11 +567,21 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
                 console.log("Tuned to " + event.x / 1000 + " KHz");
                 scope.doTune({cf: event.x});
               }
-            } else if (Math.abs(event.x - lastMouseDown.x) >= clickTolerance && event.which == 3) {
-              //disable drag tuning until warpbox can be drawn
-              //dragTune(event);
+            } else if (Math.abs(event.x - lastMouseDown.x) >= clickTolerance && mouseSelect(event.which)) {
+              dragTune(event);
             }
           };
+
+          var mouseSelect = function(button) {
+            switch (RUBBERBOX_ACTION) {
+              case 'select' :
+                return button === 1 && plot._Mx.warpbox.style !== plot._Mx.warpbox.alt_style;
+              case 'zoom' :
+                return button === 1 && plot._Mx.warpbox.style === plot._Mx.warpbox.alt_style;
+              default:
+                return false;
+            }
+          };ot
 
           var dragTune = function(event) {
             if (lastMouseDown.x && lastMouseDown.y) {
@@ -614,7 +611,6 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
           };
 
           var showHighlight = function (cf) {
-            tunedFreq = cf;//used in wideband plot to determine min/max x values in mouse listeners
             if (plot && cf !== undefined) {
               if (scope.url.indexOf('psd/wideband') >= 0) {
                 accordion.set_center(cf);
@@ -739,41 +735,6 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
               plot.push(layer, data);
               plot._Gx.ylab = 27; //this is a hack, but the only way I can get sigplot to take the value
             }
-          };
-
-          var modifyWarpboxBehavior = function(plot) {
-            plot._Mx.onmouseup = (function(Mx) {
-              return function(event) {
-                if (Mx.warpbox) {
-                  mx.onWidgetLayer(Mx, function() {
-                    mx.erase_window(Mx);
-                  });
-
-                  var old_warpbox = Mx.warpbox;
-                  Mx.warpbox = undefined;
-
-                  if (event.which === 1 || event.which === 3) {
-                    if (old_warpbox.func) {
-                      var xo = old_warpbox.xo;
-                      var yo = old_warpbox.yo;
-                      var xl = old_warpbox.xl;
-                      var yl = old_warpbox.yl;
-
-                      if (old_warpbox.mode === "vertical") {
-                        xo = Mx.l;
-                        xl = Mx.r;
-                      } else if (old_warpbox.mode === "horizontal") {
-                        yo = Mx.t;
-                        yl = Mx.b;
-                      } // else "box"
-                      old_warpbox.func(event, xo, yo, xl, yl, old_warpbox.style.return_value);
-                    }
-                  }
-
-                }
-                mx.widget_callback(Mx, event);
-              };
-            })(plot._Mx);
           };
 
           if(on_data)
