@@ -40,7 +40,7 @@ with this program.  If not, see http://www.gnu.org/licenses/.
           </div>
           <div class="form-group">
             <label class="sr-only" for="processing">Processing</label>
-            <select
+            <select ng-if="processors.length > 1"
                 ng-model="form.processing"
                 class="form-control"
                 id="processing"
