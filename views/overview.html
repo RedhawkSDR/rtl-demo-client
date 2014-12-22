@@ -47,6 +47,12 @@ with this program.  If not, see http://www.gnu.org/licenses/.
     </div>
   </div>
 
+  <div ng-show="ready && connected && !running" ng-class="row">
+    <div class="col-sm-8 col-sm-offset-2 text-center">
+      <button class="btn btn-xs btn-info" ng-click="toggleSimulator()">Toggle Simulator</button>
+    </div>
+  </div>
+
   <div ng-show="running" class="row">
     <div class="col-sm-3 col-sm-offset-3">
 
@@ -186,6 +192,18 @@ with this program.  If not, see http://www.gnu.org/licenses/.
             <h2><i class="fa fa-5x fa-meh-o"></i></h2>
             <h3>The {{device.type | uppercase}} is currently {{device.status}}.</h3>
             <p>If the device is unplugged, please plug it in.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-6 col-md-offset-3">
+
+        <div class="panel panel-info" ng-show="!device.simulator">
+          <div class="panel-body bg-info text-center">
+            <p>Switch to a FM Simulator instead of using the {{device.type}} hardware device.</p>
+            <button class="btn btn-sm btn-info" ng-click="toggleSimulator()">Switch to Simulator</button>
           </div>
         </div>
 

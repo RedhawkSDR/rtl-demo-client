@@ -41,7 +41,8 @@ angular.module('rtl-rest', ['ngResource', 'toastr', 'ngAnimate', 'SubscriptionSo
         });
 
         self.device = $resource(url+'/device', {}, {
-          status: {method: 'GET'}
+          status: {method: 'GET'},
+          configure: {method: 'PUT'}
         });
 
       }
@@ -124,6 +125,23 @@ angular.module('rtl-rest', ['ngResource', 'toastr', 'ngAnimate', 'SubscriptionSo
 
         var Device = function() {
           var self = this;
+
+          self.setSimulation = function(value) {
+            if(value == this.simulator) {
+              log.warn("Device simulation is already set to "+value);
+              return
+            }
+
+            RTLRest.device.configure({}, {simulation: value},
+              function() {
+                self._reload();
+              },
+              function(data) {
+                log.error(data['error']+" : "+data['message']);
+                toastr.error(data['message'], data['error']);
+              }
+            );
+          };
 
           self._update = function(data) {
             if('status' in data && data['status'] != self.status) {

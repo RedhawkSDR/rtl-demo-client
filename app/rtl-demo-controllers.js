@@ -43,6 +43,9 @@ angular.module('rtl-demo-controllers', ['rtl-rest'])
         $scope.halt = function(){
           $scope.survey.halt();
         };
+        $scope.toggleSimulator = function() {
+          $scope.device.setSimulation(!$scope.device.simulator)
+        };
 
         if($routeParams.frequency && $routeParams.processing) {
           $scope.form.frequency  = $routeParams.frequency;
