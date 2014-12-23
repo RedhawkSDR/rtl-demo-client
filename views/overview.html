@@ -20,14 +20,6 @@ with this program.  If not, see http://www.gnu.org/licenses/.
 -->
   <div class="row">
     <div class="col-sm-8 col-sm-offset-2">
-
-      <h1 class="text-center rhweb-page-title">Survey</h1>
-
-    </div>
-  </div>
-
-  <div class="row">
-    <div class="col-sm-8 col-sm-offset-2">
       <div ng-show="ready" class="rhweb-survey-controls text-center">
 
         <form class="form-inline" role="form">
@@ -40,18 +32,24 @@ with this program.  If not, see http://www.gnu.org/licenses/.
           </div>
           <div class="form-group">
             <label class="sr-only" for="processing">Processing</label>
-            <select
+            <select ng-if="processors.length > 1"
                 ng-model="form.processing"
                 class="form-control"
                 id="processing"
                 ng-options="p for p in processors">
             </select>
           </div>
-          <button type="submit" class="btn btn-success" ng-click="task()">Task</button>
+          <button type="submit" class="btn btn-success" ng-click="task()">Tune</button>
           <button class="btn btn-danger" ng-click="halt()">Halt</button>
         </form>
 
       </div>
+    </div>
+  </div>
+
+  <div ng-show="ready && connected && !running" ng-class="row">
+    <div class="col-sm-8 col-sm-offset-2 text-center">
+      <button class="btn btn-xs btn-info" ng-click="toggleSimulator()">Toggle Simulator</button>
     </div>
   </div>
 
@@ -89,11 +87,24 @@ with this program.  If not, see http://www.gnu.org/licenses/.
 
   <div ng-if="running" class="row">
     <div class="col-sm-12">
-      <div class="btn-group btn-group-xs pull-right">
-        <button class="btn btn-default" ng-class="{'btn-primary': widebandMode == 'line'}" ng-click="setWidebandMode('line')">Wideband (Line)</button>
-        <button class="btn btn-default" ng-class="{'btn-primary': widebandMode == 'raster'}" ng-click="setWidebandMode('raster')">Wideband (Raster)</button>
+
+      <div class="rhweb-plotting-toolbar">
+        <div class="btn-group btn-group-xs">
+          <button
+              class="btn btn-xs btn-default text-muted"
+              data-template="views/partials/plot-help-wideband.html"
+              data-trigger="hover"
+              data-animation="am-flip-x"
+              data-auto-close="1"
+              bs-popover>
+            <i class="fa fa-question-circle"></i>
+          </button>
+        </div>
+        <div class="btn-group btn-group-xs pull-right">
+          <button class="btn btn-default" ng-class="{'btn-primary': widebandMode == 'line'}" ng-click="setWidebandMode('line')">Wideband (Line)</button>
+          <button class="btn btn-default" ng-class="{'btn-primary': widebandMode == 'raster'}" ng-click="setWidebandMode('raster')">Wideband (Raster)</button>
+        </div>
       </div>
-      <p class="rhweb-plot-title">&NonBreakingSpace;</p>
 
       <div class="well well-sm text-center rhweb-plot-container">
         <div ng-if="widebandMode == 'line'">
@@ -112,17 +123,19 @@ with this program.  If not, see http://www.gnu.org/licenses/.
         </div>
       </div>
     </div>
-
   </div>
 
   <div ng-if="running" class="row">
     <div class="col-sm-12">
-      <div class="btn-group btn-group-xs pull-right">
-        <button class="btn btn-default" ng-class="{'btn-primary': detailPlotMode == 'narrowband'}" ng-click="setDetailPlotMode('narrowband')">Narrowband</button>
-        <button class="btn btn-default" ng-class="{'btn-primary': detailPlotMode == 'demod_freq'}" ng-click="setDetailPlotMode('demod_freq')">Frequency</button>
-        <button class="btn btn-default" ng-class="{'btn-primary': detailPlotMode == 'demod_time'}" ng-click="setDetailPlotMode('demod_time')">Audio</button>
+      <div class="rhweb-plotting-toolbar">
+        <div class="btn-group btn-group-xs">
+        </div>
+        <div class="btn-group btn-group-xs pull-right">
+          <button class="btn btn-default" ng-class="{'btn-primary': detailPlotMode == 'narrowband'}" ng-click="setDetailPlotMode('narrowband')">Narrowband</button>
+          <button class="btn btn-default" ng-class="{'btn-primary': detailPlotMode == 'demod_freq'}" ng-click="setDetailPlotMode('demod_freq')">Demodulated</button>
+          <button class="btn btn-default" ng-class="{'btn-primary': detailPlotMode == 'demod_time'}" ng-click="setDetailPlotMode('demod_time')">Audio</button>
+        </div>
       </div>
-      <p class="rhweb-plot-title">&NonBreakingSpace;</p>
       <div class="well well-sm text-center rhweb-plot-container">
         <div ng-if="detailPlotMode == 'narrowband'">
 
@@ -194,6 +207,18 @@ with this program.  If not, see http://www.gnu.org/licenses/.
             <h2><i class="fa fa-5x fa-meh-o"></i></h2>
             <h3>The {{device.type | uppercase}} is currently {{device.status}}.</h3>
             <p>If the device is unplugged, please plug it in.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-6 col-md-offset-3">
+
+        <div class="panel panel-info" ng-show="!device.simulator">
+          <div class="panel-body bg-info text-center">
+            <p>Switch to a FM Simulator instead of using the {{device.type}} hardware device.</p>
+            <button class="btn btn-sm btn-info" ng-click="toggleSimulator()">Switch to Simulator</button>
           </div>
         </div>
 

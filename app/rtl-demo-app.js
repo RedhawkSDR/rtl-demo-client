@@ -23,7 +23,16 @@
  *
  * Created by Rob Cannon on 8/29/14.
  **/
-angular.module('rtl-demo-app', ['ngRoute', 'rtl-demo-controllers', 'rtl-rest', 'rtl-rest-directives', 'rtl-plots', 'redhawk-audio-directives'])
+angular.module('rtl-demo-app', [
+      'ngRoute',
+      'mgcrea.ngStrap',
+      'mgcrea.ngStrap.modal',
+      'rtl-demo-controllers',
+      'rtl-rest',
+      'rtl-rest-directives',
+      'rtl-plots',
+      'redhawk-audio-directives'
+    ])
     .config(['$routeProvider',
       function($routeProvider) {
         $routeProvider
