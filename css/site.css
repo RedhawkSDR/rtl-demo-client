@@ -49,6 +49,20 @@
     background-color: #222 !important;
     border-color: #888;
 }
+.rhweb-plotting-toolbar {
+    padding: 3px;
+    float: none;
+}
+
+.plotting-help-control {
+    width: 200px;
+    font-variant: small-caps;
+    font-weight: bold;
+    padding-top: 3px;
+}
+.plotting-help-function {
+    padding-left: 10px;
+}
 
 .well {
     background-color: white;

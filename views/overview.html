@@ -87,11 +87,24 @@ with this program.  If not, see http://www.gnu.org/licenses/.
 
   <div ng-if="running" class="row">
     <div class="col-sm-12">
-      <div class="btn-group btn-group-xs pull-right">
-        <button class="btn btn-default" ng-class="{'btn-primary': widebandMode == 'line'}" ng-click="setWidebandMode('line')">Wideband (Line)</button>
-        <button class="btn btn-default" ng-class="{'btn-primary': widebandMode == 'raster'}" ng-click="setWidebandMode('raster')">Wideband (Raster)</button>
+
+      <div class="rhweb-plotting-toolbar">
+        <div class="btn-group btn-group-xs">
+          <button
+              class="btn btn-xs btn-default text-muted"
+              data-template="views/partials/plot-help-wideband.html"
+              data-trigger="hover"
+              data-animation="am-flip-x"
+              data-auto-close="1"
+              bs-popover>
+            <i class="fa fa-question-circle"></i>
+          </button>
+        </div>
+        <div class="btn-group btn-group-xs pull-right">
+          <button class="btn btn-default" ng-class="{'btn-primary': widebandMode == 'line'}" ng-click="setWidebandMode('line')">Wideband (Line)</button>
+          <button class="btn btn-default" ng-class="{'btn-primary': widebandMode == 'raster'}" ng-click="setWidebandMode('raster')">Wideband (Raster)</button>
+        </div>
       </div>
-      <p class="rhweb-plot-title">&NonBreakingSpace;</p>
 
       <div class="well well-sm text-center rhweb-plot-container">
         <div ng-if="widebandMode == 'line'">
@@ -110,17 +123,19 @@ with this program.  If not, see http://www.gnu.org/licenses/.
         </div>
       </div>
     </div>
-
   </div>
 
   <div ng-if="running" class="row">
     <div class="col-sm-12">
-      <div class="btn-group btn-group-xs pull-right">
-        <button class="btn btn-default" ng-class="{'btn-primary': detailPlotMode == 'narrowband'}" ng-click="setDetailPlotMode('narrowband')">Narrowband</button>
-        <button class="btn btn-default" ng-class="{'btn-primary': detailPlotMode == 'demod_freq'}" ng-click="setDetailPlotMode('demod_freq')">Frequency</button>
-        <button class="btn btn-default" ng-class="{'btn-primary': detailPlotMode == 'demod_time'}" ng-click="setDetailPlotMode('demod_time')">Audio</button>
+      <div class="rhweb-plotting-toolbar">
+        <div class="btn-group btn-group-xs">
+        </div>
+        <div class="btn-group btn-group-xs pull-right">
+          <button class="btn btn-default" ng-class="{'btn-primary': detailPlotMode == 'narrowband'}" ng-click="setDetailPlotMode('narrowband')">Narrowband</button>
+          <button class="btn btn-default" ng-class="{'btn-primary': detailPlotMode == 'demod_freq'}" ng-click="setDetailPlotMode('demod_freq')">Frequency</button>
+          <button class="btn btn-default" ng-class="{'btn-primary': detailPlotMode == 'demod_time'}" ng-click="setDetailPlotMode('demod_time')">Audio</button>
+        </div>
       </div>
-      <p class="rhweb-plot-title">&NonBreakingSpace;</p>
       <div class="well well-sm text-center rhweb-plot-container">
         <div ng-if="detailPlotMode == 'narrowband'">
 
