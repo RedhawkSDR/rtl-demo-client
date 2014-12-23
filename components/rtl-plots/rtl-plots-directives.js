@@ -581,7 +581,7 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
               default:
                 return false;
             }
-          };ot
+          };
 
           var dragTune = function(event) {
             if (lastMouseDown.x && lastMouseDown.y) {
