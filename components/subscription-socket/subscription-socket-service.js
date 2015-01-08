@@ -17,8 +17,8 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see http://www.gnu.org/licenses/.
  */
-angular.module('SubscriptionSocketService', [])
-  .service('SubscriptionSocket', ['$rootScope', function ($rootScope) {
+angular.module('SubscriptionSocketService', []) 
+  .service('SubscriptionSocket', ['$rootScope', 'Modernizr', function ($rootScope, Modernizr) {
     var getWSBasePath = function() {
       var loc = window.location, new_uri;
       if (loc.protocol === "https:") {
@@ -31,7 +31,38 @@ angular.module('SubscriptionSocketService', [])
       return new_uri;
     };
 
+    var WebSocket = null;
+    var doBinary = false;
+    if("WebSocket" in window) {
+      WebSocket = window.WebSocket;
+
+      // Lifted from Modernizr
+      doBinary = (function() {
+        var protocol = 'https:'==location.protocol?'wss':'ws',
+          protoBin;
+
+        if('WebSocket' in window) {
+          if( protoBin = 'binaryType' in WebSocket.prototype ) {
+            return protoBin;
+          }
+          try {
+            return !!(new WebSocket(protocol+'://.').binaryType);
+          } catch (e){}
+        }
+
+        return false;
+      })();
+    }
+    else if("MozWebSocket" in window) {
+      WebSocket = window.MozWebSocket;
+    }
+
     var Socket = function() {
+      if(!Modernizr.websockets) {
+        console.log("ERROR: SubscriptionSocket: Not supported by this browser.");
+        return;
+      }
+
       var self = this;
       this.callbacks = {
         message: [],
@@ -48,12 +79,16 @@ angular.module('SubscriptionSocketService', [])
         });
       };
       this.connect = function (path, callback) {
+        console.log("Socket connect: "+path);
 
         if(!path.match(/^ws(s?)\:/))
           path = getWSBasePath() + path;
 
         self.path = path;
-        self.ws = new WebSocket(path);
+        self.ws = null;
+        if(WebSocket)
+          self.ws = new WebSocket(path);
+
         self.ws.onopen = function (data) {
           console.log("Socket opened: "+self.path);
           self.ws.binaryType = "arraybuffer";
@@ -80,6 +115,9 @@ angular.module('SubscriptionSocketService', [])
         this.callbacks.json.push(callback);
       };
       this.addBinaryListener = function (callback) {
+        if(!doBinary) {
+          console.log("WARN:: Socket: Browser does not support binary sockets");
+        }
         this.callbacks.binary.push(callback);
       };
       this.send = function (data) {
@@ -92,7 +130,11 @@ angular.module('SubscriptionSocketService', [])
       }
     };
 
+    //var supportedBrowser = ("WebSocket" in window);
+
     return {
-      createNew: function() { return new Socket(); }
+      createNew: function() { return new Socket(); },
+      isSupported: function() { return Modernizr.websockets; },
+      isBinarySupported: function() { return doBinary; }
     }
   }]);
