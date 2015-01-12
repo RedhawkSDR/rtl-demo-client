@@ -66,7 +66,7 @@ module.exports = function(grunt) {
           endtag: '<!-- endbuild -->'
         },
         files: {
-          'index.html': ['components/**/*.js', 'app/**/*.js', 'css/**/*.css']
+          'index.html': ['components/**/*.js', 'components/**/*.css', 'app/**/*.js', 'css/**/*.css']
         }
       }
     },

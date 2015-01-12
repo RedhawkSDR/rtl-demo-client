@@ -21,7 +21,7 @@
  * Created by Rob Cannon on 9/22/14.
  */
 angular.module('rtl-plots', ['SubscriptionSocketService'])
-    .service('plotDataConverter', function(){
+    .service('plotDataConverter', ['Modernizr', function(Modernizr){
       /*
        Create a map to convert the standard REDHAWK BulkIO Formats
        into Javascript equivalents.
@@ -67,10 +67,15 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
 
         return function(data) { return new fn(data); };
       };
-    })
+    }])
+    .service('plotNotSupportedError', [function(){
+      return function(element) {
+        element.html('<div class="rtl-plots-error">Plotting is not supported by this browser.</div>');
+      }
+    }])
     //Line plot
-    .directive('rtlPlot', ['SubscriptionSocket', 'plotDataConverter',
-      function(SubscriptionSocket, plotDataConverter){
+    .directive('rtlPlot', ['SubscriptionSocket', 'plotDataConverter', 'plotNotSupportedError',
+      function(SubscriptionSocket, plotDataConverter, plotNotSupportedError){
         return {
           restrict: 'E',
           scope: {
@@ -82,9 +87,12 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
             useGradient: '=?',
             cmode: '@?'
           },
-          template: '<div style="width: {{width}}; height: {{height}};" id="plot" ></div>',
+          template: '<div style="width: {{width}}; height: {{height}};" ></div>',
           link: function (scope, element, attrs) {
-
+            if(!SubscriptionSocket.isSupported() || !SubscriptionSocket.isBinarySupported()) {
+              plotNotSupportedError(element);
+              return;
+            }
             var socket = SubscriptionSocket.createNew();
 
             var RUBBERBOX_ACTION = 'select';
@@ -107,7 +115,6 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
              */
             var validCMode = ['IN', 'AB', 'MA', 'PH', 'RE', 'LO', 'D1', 'L2', 'D2'];
             var cmode = 'D2';
-            console.log(scope.cmode);
             if(angular.isDefined(scope.cmode) && scope.cmode != "") {
               if(validCMode.indexOf(scope.cmode) == -1) {
                 console.log("WARN::Invalid cmode '"+scope.cmode+"' setting to '"+cmode+"'.");
@@ -475,8 +482,8 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
     ])
     //TODO factor out common code from line and raster plot directives
   //Raster plot
-  .directive('rtlRaster', ['SubscriptionSocket', 'plotDataConverter',
-    function(SubscriptionSocket, plotDataConverter){
+  .directive('rtlRaster', ['SubscriptionSocket', 'plotDataConverter', 'plotNotSupportedError',
+    function(SubscriptionSocket, plotDataConverter, plotNotSupportedError){
       return {
         restrict: 'E',
         scope: {
@@ -488,6 +495,10 @@ angular.module('rtl-plots', ['SubscriptionSocketService'])
         },
         template: '<div style="width: {{width}}; height: {{height}};" id="raster" ></div>',
         link: function (scope, element, attrs) {
+          if(!SubscriptionSocket.isSupported() || !SubscriptionSocket.isBinarySupported()) {
+            plotNotSupportedError(element);
+            return;
+          }
           var socket = SubscriptionSocket.createNew();
 
           var plot, layer, accordion;

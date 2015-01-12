@@ -49,4 +49,5 @@ angular.module('rtl-demo-app', [
           });
       }
     ])
+   .constant("Modernizr", Modernizr)
 ;
